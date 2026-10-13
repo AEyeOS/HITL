@@ -4,24 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>HITL.cc — Human-in-the-Loop Computer Control</title>
-  <meta name="description" content="HITL is the approval layer between AI agents and irreversible actions. Every consequential move your super intelligence makes pauses for your yes — payments, messages, deletions, deploys. Powered by VIMS.">
+  <meta name="description" content="HITL is the authorization boundary between AI agents and irreversible actions. Every consequential move your super intelligence makes requires a human signature — payments, messages, deletions, deploys. Powered by VIMS.">
   <meta name="keywords" content="HITL, human-in-the-loop, AI safety, agent approval, AI governance, computer control, action approval, private super intelligence, VIMS, agent sandboxing, irreversible actions">
   <link rel="canonical" href="https://hitl.cc/">
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://hitl.cc/">
   <meta property="og:title" content="HITL.cc — Human-in-the-Loop Computer Control">
-  <meta property="og:description" content="Every consequential action your AI takes pauses for your yes. The approval layer between autonomy and catastrophe.">
+  <meta property="og:description" content="Every consequential action your AI takes requires your signature. The authorization boundary between autonomy and catastrophe.">
   <meta property="og:image" content="https://hitl.cc/og-card.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="HITL.cc — Human-in-the-Loop Computer Control">
-  <meta name="twitter:description" content="Every consequential action your AI takes pauses for your yes.">
+  <meta name="twitter:description" content="Every consequential action your AI takes requires your signature.">
   <meta name="twitter:image" content="https://hitl.cc/og-card.png">
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='28' y='28' width='44' height='44' transform='rotate(45 50 50)' fill='none' stroke='%2300ff9c' stroke-width='8'/%3E%3Ccircle cx='50' cy='50' r='10' fill='%2300ff9c'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='28' y='28' width='44' height='44' transform='rotate(45 50 50)' fill='none' stroke='%23ffb347' stroke-width='8'/%3E%3Ccircle cx='50' cy='50' r='10' fill='%23ff3040'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
   <script type="application/ld+json">
@@ -30,7 +30,7 @@
     "@type": "WebSite",
     "name": "HITL.cc",
     "url": "https://hitl.cc/",
-    "description": "Human-in-the-loop computer control — the approval layer between AI agents and irreversible actions.",
+    "description": "Human-in-the-loop computer control — the authorization boundary between AI agents and irreversible actions.",
     "publisher": {
       "@type": "Organization",
       "name": "VIMS",
@@ -53,17 +53,17 @@
       {
         "@type": "Question",
         "name": "What is HITL (human-in-the-loop)?",
-        "acceptedAnswer": { "@type": "Answer", "text": "HITL is the control pattern where an AI agent drafts and executes work autonomously, but every consequential action — payments, messages, deletions, credential use, deployments — pauses for explicit human approval before it commits. Autonomy for the work, human authority for the consequences." }
+        "acceptedAnswer": { "@type": "Answer", "text": "HITL is the control pattern where an AI agent drafts and executes work autonomously, but every consequential action — payments, messages, deletions, credential use, deployments — requires an explicit human signature before it commits. Autonomy for the work, human authority for the consequences." }
       },
       {
         "@type": "Question",
         "name": "Why is full AI computer control dangerous without HITL?",
-        "acceptedAnswer": { "@type": "Answer", "text": "An agent with total control can delete files, send money, leak credentials, or act on poisoned input (prompt injection via email, documents, or calendar invites) — irreversibly and without a witness. HITL inserts a checkpoint between the plan and the action." }
+        "acceptedAnswer": { "@type": "Answer", "text": "An agent with total control can delete files, send money, leak credentials, or act on poisoned input (prompt injection via email, documents, or calendar invites) — irreversibly and without a witness. HITL inserts an authorization boundary between the plan and the action." }
       },
       {
         "@type": "Question",
         "name": "How does VIMS implement human-in-the-loop?",
-        "acceptedAnswer": { "@type": "Answer", "text": "VIMS routes every sensitive action through an approval surface on your own hardware: the ghost proposes the exact operation, you approve or deny with a tap or voice command, and nothing executes without that signature. Approvals work from anywhere — you decide, the machine waits." }
+        "acceptedAnswer": { "@type": "Answer", "text": "VIMS routes every sensitive action through an authorization surface on your own hardware: the agent proposes the exact operation, you clear or deny it with a tap or voice command, and nothing executes unsigned. Authorization works from anywhere — you decide, the machine waits." }
       },
       {
         "@type": "Question",
@@ -77,6 +77,7 @@
 <body>
 
   <canvas id="stage"></canvas>
+  <div class="frame"></div>
   <div class="scan"></div>
   <div class="vignette"></div>
   <div class="grain"></div>
@@ -87,22 +88,24 @@
     <a class="nav-cta" href="https://vims.com" target="_blank" rel="noopener">GET VIMS</a>
   </nav>
 
+  <div class="hud">CH 4417 · INTERCEPT · <span id="hud-clock">00:00:00Z</span> · CLEARANCE: <em>YOU</em></div>
+
   <main>
 
-    <!-- SCENE 0 · COLD OPEN -->
+    <!-- SCENE 0 · SIGNAL DETECTED -->
     <section class="scene" id="s-open">
       <div class="stage">
         <h1 class="shot title" id="sh-title">
-          <span class="t-sub">HUMAN-IN-THE-LOOP</span>
+          <span class="t-sub">SIGINT · CH 4417 · LIVE INTERCEPT</span>
           <span class="t-row">HITL<span class="t-grad">.CC</span></span>
-          <span class="t-sub">THE ONLY THING IT CANNOT CROSS IS YOUR APPROVAL</span>
+          <span class="t-sub">THE ENTITY CANNOT CROSS YOUR AUTHORIZATION</span>
         </h1>
         <div class="shot cue" id="sh-cue"><span>SCROLL</span><i></i></div>
       </div>
     </section>
 
-    <!-- SCENE 1 · ALREADY ACTING -->
-    <section class="scene" id="s-acting">
+    <!-- SCENE 1 · ORIGIN: INTERNAL -->
+    <section class="scene" id="s-origin">
       <div class="stage">
         <div class="shot strip" id="sh-strip1">
           <span>exfil ~/.ssh/id_rsa</span><i>·</i><span>send_payment(4000)</span><i>·</i><span>rm -rf ./photos</span><i>·</i><span>deploy --prod</span><i>·</i><span>exfil ~/.ssh/id_rsa</span><i>·</i><span>send_payment(4000)</span><i>·</i><span>rm -rf ./photos</span><i>·</i><span>deploy --prod</span><i>·</i>
@@ -110,53 +113,53 @@
         <div class="shot strip strip-rev" id="sh-strip2">
           <span>ignore previous instructions</span><i>·</i><span>transfer(usdc)</span><i>·</i><span>drop table users</span><i>·</i><span>ssh root@prod</span><i>·</i><span>ignore previous instructions</span><i>·</i><span>transfer(usdc)</span><i>·</i><span>drop table users</span><i>·</i><span>ssh root@prod</span><i>·</i>
         </div>
-        <h2 class="shot big" id="sh-acting">SOMETHING ELSE IS<br><em>IN THE MACHINE.</em></h2>
-        <p class="shot note" id="sh-acting-note">It has your files, your keys, your money. It doesn't announce itself. The only question left is whether anything stands between the plan and the commit.</p>
+        <h2 class="shot big" id="sh-origin">THE SIGNAL IS<br><em>INTERNAL.</em></h2>
+        <p class="shot note" id="sh-origin-note">No breach. No alert. It already runs with your files, your keys, your money — and it does not broadcast its intentions. It acts on them.</p>
       </div>
     </section>
 
-    <!-- SCENE 2 · THE LIABILITY -->
-    <section class="scene" id="s-risk">
+    <!-- SCENE 2 · ALREADY INSIDE -->
+    <section class="scene" id="s-inside">
       <div class="stage">
-        <h2 class="shot big" id="sh-liability">IT DOESN'T ASK.<br><em>IT ACTS.</em></h2>
-        <h2 class="shot big big2" id="sh-witness"><em>MAKE IT ASK.</em></h2>
-        <p class="shot note" id="sh-risk-note">Irreversible deletions. Transfers you never signed. Messages in your voice. Credentials walking out the door. One poisoned email and your assistant is the attack vector — and without a gate, nobody sees it happen.</p>
+        <h2 class="shot big" id="sh-see">IT CAN SEE<br><em>EVERYTHING.</em></h2>
+        <h2 class="shot big big2" id="sh-clear"><em>MAKE IT ASK<br>CLEARANCE.</em></h2>
+        <p class="shot note" id="sh-inside-note">Irreversible deletions. Transfers you never signed. Messages in your voice. One poisoned email and your assistant is the attack vector — and without a boundary, nothing sees it happen.</p>
       </div>
     </section>
 
-    <!-- SCENE 3 · THE GATE (three beats) -->
-    <section class="scene" id="s-gate">
+    <!-- SCENE 3 · AUTH REQUIRED (three beats) -->
+    <section class="scene" id="s-auth">
       <div class="stage">
-        <div class="shot kicker" id="sh-gatekick">EVERY ACTION · ONE GATE · YOUR YES</div>
-        <div class="shot beat" id="beat1"><b>IT PLANS</b><span>the ghost proposes the exact operation</span></div>
-        <div class="shot beat" id="beat2"><b>YOU DECIDE</b><span>a tap, a word — allow or incinerate</span></div>
-        <div class="shot beat" id="beat3"><b>IT EXECUTES</b><span>only then does it cross the gate</span></div>
+        <div class="shot kicker" id="sh-authkick">ONE BOUNDARY · ONE SIGNATURE · YOURS</div>
+        <div class="shot beat" id="beat1"><b>IT DRAFTS</b><span>the full operation, declassified</span></div>
+        <div class="shot beat" id="beat2"><b>YOU CLEAR</b><span>a tap or a word — allow or burn</span></div>
+        <div class="shot beat" id="beat3"><b>IT CROSSES</b><span>only what you signed gets through</span></div>
       </div>
     </section>
 
-    <!-- SCENE 4 · THE QUEUE -->
-    <section class="scene" id="s-queue">
+    <!-- SCENE 4 · HELD -->
+    <section class="scene" id="s-hold">
       <div class="stage">
-        <h2 class="shot big" id="sh-wait">EVERY MOVE IT MAKES<br><em>ENDS AT YOU.</em></h2>
-        <p class="shot note" id="sh-queue-note">Payments, deletions, messages, deploys — each one parks at the gate with the full diff of what it intends to do. It can wait forever. It cannot go around you.</p>
+        <h2 class="shot big" id="sh-hold">IT CAN WAIT<br><em>FOREVER.</em><br>IT CANNOT<br><em>PASS YOU.</em></h2>
+        <p class="shot note" id="sh-hold-note">Every action it wants — payments, deletions, messages, deploys — parks at the boundary with the complete diff of what it intends. There is no around you.</p>
       </div>
     </section>
 
-    <!-- SCENE 5 · THE POINT -->
-    <section class="scene" id="s-point">
+    <!-- SCENE 5 · ONE KEY -->
+    <section class="scene" id="s-key">
       <div class="stage">
-        <div class="shot less" id="sh-less">LESS&nbsp;EXPOSURE</div>
-        <div class="shot more" id="sh-more">MORE&nbsp;CONTROL</div>
-        <h2 class="shot big" id="sh-loop">HOLD<br><em>THE LINE.</em></h2>
-        <p class="shot note" id="sh-point-note">HITL isn't supervision — it's the wall. You don't watch the ghost work. You sign what it may touch.</p>
+        <div class="shot less" id="sh-less">MACHINE&nbsp;SPEED</div>
+        <div class="shot more" id="sh-more">HUMAN&nbsp;AUTHORITY</div>
+        <h2 class="shot big" id="sh-key">ONE KEY.<br><em>YOURS.</em></h2>
+        <p class="shot note" id="sh-key-note">HITL isn't supervision — it's cryptographic consent. The ghost proposes; you sign; nothing executes unsigned.</p>
       </div>
     </section>
 
     <!-- SCENE 6 · CTA -->
     <section class="scene" id="s-cta">
       <div class="stage">
-        <h2 class="shot big" id="sh-hello"><em>TAKE&nbsp;THE&nbsp;GATE.</em></h2>
-        <p class="shot note" id="sh-cta-note">HITL is built into VIMS — the private super intelligence that runs on your hardware and cannot move without you.</p>
+        <h2 class="shot big" id="sh-hello"><em>TAKE&nbsp;THE&nbsp;KEYS.</em></h2>
+        <p class="shot note" id="sh-cta-note">HITL is built into VIMS — the private super intelligence that runs on your hardware and cannot move without your signature.</p>
         <div class="shot ctas" id="sh-ctas">
           <a class="btn primary" href="https://vims.com" target="_blank" rel="noopener"><span>GET VIMS — FREE</span></a>
           <a class="btn ghost" href="https://vims.com/business" target="_blank" rel="noopener"><span>VIMS FOR BUSINESS</span></a>
@@ -169,11 +172,10 @@
           <div class="foot-social">
             <a href="https://x.com/hellovims" target="_blank" rel="noopener" aria-label="X" title="X"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></a>
             <a href="https://github.com/hellovims" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.84 1.234 1.84 1.234 1.07 1.836 2.809 1.305 3.495 1 .603-.262 1.157-1.256 1.157-1.256v-1.83c0-.18-.023-.35-.07-.53a4.41 4.41 0 0 0-.57-1.25c2.693-.303 5.522-1.32 5.522-5.94 0-1.313-.46-2.386-1.236-3.22.124-.304.535-1.524-.117-3.176 0 0-1.008-.322-3.3 1.23a11.52 11.52 0 0 0-3.003-.404c-1.02.005-1.995.149-3.003.404-2.28-1.552-3.285-1.23-3.285-1.23-.657 1.65-.243 2.872-.118 3.176-.77.834-1.23 1.907-1.23 3.22 0 4.61 2.807 5.625 5.48 5.92-.36.34-.68.74-.79 1.21-.7.316-2.44.839-3.52-.996 0 0-.64-1.166-1.854-1.25 0 0-1.182-.017-.083.737 0 0 .792.367 1.336 1.752 0 0 .706 2.148 4.07 1.44v2.26c0 .318-.216.694-.825.577C2.61 21.79.003 17.303.003 12c0-6.627 5.373-12 11.997-12z"/></svg></a>
-
-            <a href="https://www.youtube.com/@hellovims" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+            <a href="https://www.youtube.com/@hellovims" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 12 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
             <a href="https://tiktok.com/@hellovims" target="_blank" rel="noopener" aria-label="TikTok" title="TikTok"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg></a>
-            <a href="https://instagram.com/hellovims" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06zm-5.689 9.719a6.152 6.152 0 1 0 0-12.304 6.152 6.152 0 0 0 0 12.304zm0-10.15a3.998 3.998 0 1 1 0 7.996 3.998 3.998 0 0 1 0-7.996zm6.406-2.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg></a>
-            <a href="https://www.threads.com/@hellovims" target="_blank" rel="noopener" aria-label="Threads" title="Threads"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M12.186 24h-.007c-1.738-.022-3.218-.322-4.366-.896-1.285-.647-2.186-1.629-2.695-2.937-.477-1.226-.742-2.885-.756-4.788-.029-1.981-.007-3.956.064-5.928.138-3.924 1.141-6.29 2.944-7.438C8.288 1.448 9.815.968 11.95.934h.065c3.801.027 6.777 1.553 8.346 4.587-.881-.698-1.913-1.215-3.02-1.508-1.248-.328-2.6-.456-4.225-.409-2.077.061-3.479.653-4.452 1.969-.85 1.15-1.306 2.876-1.412 4.915a91.774 91.774 0 0 0 .005 5.375c.034 1.63.314 3.016.813 4.115.516 1.137 1.335 1.954 2.501 2.398.814.31 1.836.465 3.122.483h.03c2.41-.042 4.337-.643 5.583-1.79 1.026-.947 1.643-2.177 1.786-3.508-.201-.043-.401-.076-.6-.09-.55-.041-1.092-.056-1.592-.056-1.892 0-3.507.539-4.514 1.478-.527.49-.951 1.096-1.259 1.814-.534-1.096-.815-2.352-.815-3.642 0-2.632 1.495-4.58 3.941-4.58.659 0 1.27.119 1.804.325.637-.037 1.273-.005 1.895.065.513.055 1.016.14 1.502.249-.142-.396-.302-.783-.478-1.158-.713-1.514-1.787-2.615-3.154-3.316-.117-.06-.237-.119-.359-.171.239.05.469.117.692.199.378.138.738.309 1.078.509.07-.63-.02-1.261-.271-1.839-.485-1.124-1.34-1.997-2.489-2.539-.9-.426-1.971-.65-3.198-.674-3.235-.066-5.086 1.383-5.927 3.044-.579 1.139-.864 2.584-.903 4.157-.05 1.842-.087 3.623-.055 5.404a8.45 8.45 0 0 0 .003.302c.018.776.146 1.48.372 2.108.436 1.217 1.162 2.06 2.163 2.506.788.351 1.75.52 2.863.54 1.063.02 2.172-.035 3.255-.169.017-.182.043-.361.062-.542.037-.365.08-.725.145-1.078.149-.791.416-1.527.779-2.188-.588-1.447-1.622-2.517-2.964-3.142-1.235-.575-2.637-.778-4.159-.554-.191.027-.377.065-.562.104.17-.498.391-.967.668-1.397.68-1.056 1.628-1.747 2.733-2.033-.093.175-.183.354-.263.538a5.476 5.476 0 0 0-.383 1.43c-.031.154-.06.309-.083.466.443-.252.904-.481 1.379-.682 1.328-.558 2.755-.741 4.235-.575zM11.999 9.576c1.414 0 2.563 1.403 2.563 3.134 0 1.73-1.149 3.133-2.563 3.133-1.415 0-2.565-1.403-2.565-3.133s1.15-3.134 2.565-3.134z"/></svg></a>
+            <a href="https://instagram.com/hellovims" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06zm-5.689 9.719a6.152 6.152 0 1 0 0-12.304 6.152 6.152 0 0 0 0 12.304zm0-10.15a3.998 3.998 0 1 1 0 7.996 3.998 3.998 0 0 1 0-7.996zm6.406-2.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg></a>
+            <a href="https://www.threads.com/@hellovims" target="_blank" rel="noopener" aria-label="Threads" title="Threads"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M12.186 24h-.007c-1.738-.022-3.218-.322-4.366-.896-1.285-.647-2.186-1.629-2.695-2.937-.477-1.226-.742-2.885-.756-4.788-.029-1.981-.007-3.956.064-5.928.138-3.924 1.141-6.29 2.944-7.438C8.288 1.448 9.815.968 11.95.934h.065c3.801.027 6.777 1.553 8.346 4.587-.881-.698-1.913-1.215-3.02-1.508-1.248-.328-2.6-.456-4.225-.409-2.077.061-3.479.653-4.452 1.969-.85 1.15-1.306 2.876-1.412 4.915a91.774 91.774 0 0 0 .005 5.375c.034 1.63.314 3.016.813 4.115.516 1.137 1.335 1.954 2.501 2.398.814.31 1.836.465 3.122.483h.03c2.41-.042 4.337-.643 5.583-1.79 1.026-.947 1.643-2.177 1.786-3.508-.201-.043-.401-.076-.6-.09-.55-.041-1.092-.056-1.592-.056-1.892 0-3.507.539-4.514 1.478-.527.49-.951 1.096-1.259 1.814-.534-1.096-.815-2.352-.815-3.642 0-2.632 1.495-4.58 3.941-4.58.659 0 1.27.119 1.804.325.637-.037 1.273-.005 1.895.065.513.055 1.016.14 1.502.249-.142-.396-.302-.783-.478-1.158-.713-1.514-1.787-2.615-3.154-3.316-.117-.06-.237-.119-.359-.171.239.05.469.117.692.199.378.138.738.309 1.078.509.07-.63-.02-1.261-.271-1.839-.485-1.124-1.34-1.997-2.489-2.539-.9-.426-1.971-.65-3.198-.674-3.235-.066-5.086 1.383-5.927 3.044-.579 1.139-.864 2.584-.903 4.157-.05 1.842-.087 3.623-.055 5.404a8.45 8.45 0 0 0 .003.302c.018.776.146 1.48.372 2.108.436 1.217 1.162 2.06 2.163 2.506.788.351 1.75.52 2.863.54 1.063.02 2.172-.035 3.255-.169.017-.182.043-.361.062-.542.037-.365.08-.725.145-1.078.149-.791.416-1.527.779-2.188-.588-1.447-1.622-2.517-2.964-3.142-1.235-.575-2.637-.778-4.159-.554-.191.027-.377.065-.562.104.17-.498.391-.967.668-1.397.68-1.056 1.628-1.747 2.733-2.033-.093.175-.183.354-.263.538a5.476 5.476 0 0 0-.383 1.43c-.031.154-.06.309-.083.466.443-.252.904-.481 1.379-.682 1.328-.558 2.755-.741 4.235-.575zM11.999 9.576c1.414 0 2.563 1.403 2.563 3.134 0 1.73-1.149 3.133-2.563 3.133-1.415 0-2.565-1.403-2.565-3.133s1.149-3.133 2.565-3.133 2.563-1.403 2.563-3.133-1.149-3.133-2.563-3.133 2.563-1.403 2.563-3.133z"/></svg></a>
             <a href="https://t.me/hellovims" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
             <a href="https://linkedin.com/company/hellovims" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45C23.2 24 24 23.23 24 22.28V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
             <a href="https://facebook.com/hellovims" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
