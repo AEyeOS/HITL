@@ -205,7 +205,7 @@ float railY(float x, float lane){
 void main(){
   vec2 uv = gl_FragCoord.xy / R;
   uv.y = 1.-uv.y;
-  vec3 col = vec3(.008,.024,.016);
+  vec3 col = vec3(.010,.030,.019);
 
   /* ambient glow */
   if(Glow>.01){
@@ -386,6 +386,7 @@ void main(){
   /* grain + flicker */
   col += (hash2(uv*fract(T)*371.)-.5)*.045;
   col *= .96+.04*sin(T*57.)*min(Glitch,1.);
+  col *= 1.22; /* exposure */
   /* vignette */
   col *= smoothstep(1.15,.35,distance(uv,vec2(.5)));
   gl_FragColor = vec4(col,1.);
@@ -455,13 +456,13 @@ void main(){
 
   /* ============ C · MOODS + SIM ============ */
   const MOODS = [
-    { lanes: 1, flow: .3,  sp: .9,  turb: .08, danger: 0,   gate: 0, queue: 0,   ekg: .4,  glow: .9,  railY: .5,  hue: 0,   glitch: .12, infect: .08, presence: 0 },
-    { lanes: 3, flow: 1.8, sp: 3.4,  turb: .6,  danger: .08, gate: 0, queue: 0,   ekg: 0,   glow: .15, railY: .5,  hue: .2,  glitch: .55, infect: .3,  presence: .25 },
+    { lanes: 1, flow: .9,  sp: 1.1, turb: .08, danger: 0,   gate: 0, queue: 0,   ekg: .4,  glow: 1.2, railY: .5,  hue: 0,   glitch: .18, infect: .12, presence: .4 },
+    { lanes: 3, flow: 1.8, sp: 3.4,  turb: .6,  danger: .08, gate: 0, queue: 0,   ekg: 0,   glow: .15, railY: .5,  hue: .2,  glitch: .55, infect: .3,  presence: .55 },
     { lanes: 2, flow: 1,   sp: 2.4,  turb: 1.7, danger: .45, gate: 0, queue: 0,   ekg: 0,   glow: .3,  railY: .5,  hue: .8,  glitch: 1,   infect: .85, presence: 1 },
     { lanes: 1, flow: 1.4, sp: 1.5,  turb: .15, danger: .3,  gate: 1, queue: 1,   ekg: 0,   glow: .35, railY: .62, hue: .2,  glitch: .5,  infect: .4,  presence: .55 },
     { lanes: 1, flow: .9,  sp: .55,  turb: .05, danger: .18, gate: 1, queue: 1.3, ekg: 0,   glow: .25, railY: .68, hue: .1,  glitch: .3,  infect: .2,  presence: .3 },
     { lanes: 1, flow: .35, sp: .8,   turb: .12, danger: 0,   gate: 0, queue: 0,   ekg: 1,   glow: .8,  railY: .5,  hue: 0,   glitch: .1,  infect: .05, presence: 0 },
-    { lanes: 1, flow: .3,  sp: 1.1,  turb: .1,  danger: 0,   gate: .8, queue: .6, ekg: .5,  glow: 1.1, railY: .5,  hue: 0,   glitch: .08, infect: .03, presence: 0 },
+    { lanes: 1, flow: .3,  sp: 1.1,  turb: .1,  danger: 0,   gate: .8, queue: .6, ekg: .5,  glow: 1.1, railY: .5,  hue: 0,   glitch: .08, infect: .03, presence: .14 },
   ];
   const MOOD_KEYS = Object.keys(MOODS[0]);
   let phase = 0;
