@@ -257,8 +257,11 @@ void main(){
       /* THE LIP — thrown whitewater; darker inside the tube */
       float fm=.5+fbm2(q.xy*6.+vec2(T*3.,0.))*.7;
       lum += fm*(.4+.6*Face);
+      /* the throwing edge burns brightest */
+      vec2 lp=vec2(q.z-BZ,q.y-LCY);
+      lum += smoothstep(.2,.0,abs(length(lp)-BR))*step(.1,lp.y)*Face*1.3;
       threat += (.1+Threat*.5)*Face;
-      if(dot(n,-rd)<0.) lum*=.3;
+      if(dot(n,-rd)<0.){ lum*=.25; lum+=Face*.22; } /* interior — the green room glow */
     } else {
       /* THE SEA */
       float steep=clamp(1.-n.y,0.,1.);
@@ -273,6 +276,10 @@ void main(){
       /* laminar channels — cleared water sliding through your gap */
       float lam=Gate*clamp(1.-Spike*2.4,0.,1.)*smoothstep(WZ-.3,WZ+.9,q.z);
       lum += lam*pow(.5+.5*sin((q.x-GX)*2.2+q.z*.35-T*2.4*Spin),7.)*.55;
+      /* the gap — water bursts through where you cleared it */
+      float gapGlow=exp(-abs(q.x-GX)*2.2)*exp(-abs(q.z-WZ)*1.8);
+      lum += Gate*gapGlow*(.3+.4*sin(T*6.+q.z*8.))*.9;
+      lum += lam*exp(-abs(q.x-GX)*1.4)*exp(-max(0.,WZ-q.z)*.3)*.8;
     }
     /* spray — airborne off the lip and the wall */
     float spr=step(.982,h3(q*11.+floor(T*17.)));
@@ -280,9 +287,10 @@ void main(){
     threat += spr*Threat*.5;
     lum *= exp(-hit*.045); /* distance haze */
   } else {
-    /* sky — grain, faint stars, horizon haze */
+    /* sky — grain, faint stars, drizzle streaks */
     lum += smoothstep(Ey,1.,uv.y)*.05;
     lum += step(.996,h2(uv*R+floor(T*2.)))*.15*(1.-Threat*.5);
+    lum += step(.985,h2(vec2(floor(uv.x*R.x*1.4),floor(uv.y*R.y*2.+T*18.))))*.09;
   }
   /* the horizon never ends */
   lum += exp(-abs(uv.y-Ey)*R.y*.3)*.1;

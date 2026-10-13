@@ -187,19 +187,14 @@ em.ch-parent{background:none;-webkit-background-clip:initial;background-clip:ini
 /* ---------- footer ---------- */
 .foot{
   position:absolute;left:0;right:0;bottom:0;
-  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  font-size:10px;letter-spacing:.24em;color:var(--dim);
   padding:20px max(34px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(34px,env(safe-area-inset-left));
   white-space:normal;
 }
-.foot-brand{font-weight:800;font-size:13px;letter-spacing:.28em;color:var(--dim);transition:color .2s}
+.foot-brand{font-weight:800;letter-spacing:.28em;color:var(--dim);transition:color .2s}
 .foot-brand:hover{color:var(--amber)}
-.foot-social{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
-.foot-social a{color:#4f4b40;transition:all .2s;display:flex}
-.foot-social a:hover{color:var(--amber);text-shadow:0 0 14px rgba(255,179,71,.6);transform:translateY(-2px)}
-.foot-right{display:flex;gap:20px;align-items:center;font-size:10px;letter-spacing:.2em;color:var(--dim)}
-.foot-right a{transition:color .2s}
-.foot-right a:hover{color:var(--amber)}
-.foot-right em{font-style:normal;color:#4a463c}
+.foot em{font-style:normal}
 
 /* ---------- mobile ---------- */
 @media (max-width:700px){
@@ -221,9 +216,7 @@ em.ch-parent{background:none;-webkit-background-clip:initial;background-clip:ini
   .ctas{flex-direction:column;gap:12px;width:min(78vw,320px)}
   .btn{width:100%;text-align:center;padding:14px 18px;font-size:11px}
   .meta{letter-spacing:.22em}
-  .foot{flex-direction:column;gap:14px;padding:16px 20px max(18px,env(safe-area-inset-bottom))}
-  .foot-social{gap:16px}
-  .foot-right{font-size:9px;gap:14px}
+  .foot{font-size:9px}
   .cue{bottom:max(34px,env(safe-area-inset-bottom))}
 }
 
