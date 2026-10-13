@@ -340,13 +340,14 @@ void main(){
   vec3 scene = texture2D(SCENE,uv).rgb;
   /* micro-zoom decay — trails smear outward like phosphor bleed */
   vec2 fuv = (uv-.5)*1.0015+.5;
-  vec3 fb = texture2D(FB,fuv).rgb*.905;
-  fb += texture2D(FB,fuv+vec2(.0012,0.)).rgb*.02;
-  fb += texture2D(FB,fuv-vec2(.0012,0.)).rgb*.02;
+  vec3 fb = texture2D(FB,fuv).rgb*.885;
+  fb += texture2D(FB,fuv+vec2(.0012,0.)).rgb*.03;
+  fb += texture2D(FB,fuv-vec2(.0012,0.)).rgb*.03;
   /* red decays faster — infection fades quicker than the machine heals */
-  fb *= vec3(.985,1.,.99);
+  fb *= vec3(.96,1.,.985);
   if(fb.r!=fb.r||fb.g!=fb.g||fb.b!=fb.b) fb=vec3(0.);
-  vec3 col = scene + fb*vec3(.96,.99,.97);
+  /* phosphor persistence: history decays, scene overwrites — nothing accumulates */
+  vec3 col = max(scene, fb);
   /* ghost-scanline noise baked in so corruption persists into history */
   if(Glitch>.05){
     float b=floor(uv.y*46.);
