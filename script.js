@@ -152,7 +152,7 @@
 precision highp float;
 uniform vec2 R;
 uniform float T;
-uniform float P, Spike, Spin, Glitch, Threat, Gate, Press, Ekg, Lum, Ex, Ey, Face;
+uniform float P, Spike, Spin, Glitch, Threat, Gate, Press, Ekg, Lum, Ex, Ey, Face, Steps;
 uniform vec2 PTR;
 /* BZ lip z · BR lip radius · LCY lip height · BX lateral drift · WZ wall z */
 float BZ,BR,LCY,BX,WZ;
@@ -217,6 +217,7 @@ void main(){
   vec3 rd = normalize(vec3(sp.x-PTR.x*1.2, sp.y-PTR.y*.8, -2.3));
   float td=0., hit=-1.;
   for(int i=0;i<48;i++){
+    if(float(i)>Steps) break;
     float d=map(ro+rd*td);
     if(d<.003){ hit=max(td,.01); break; }
     td+=d*.7;
@@ -483,10 +484,14 @@ void main(){
     return;
   }
 
-  const CELL_W = 10, CELL_H = 15;
+  let CELL_W = 10, CELL_H = 15, steps = 48;
   function resize() {
-    dpr = Math.min(devicePixelRatio || 1, 1.5);
+    const small = innerWidth < 700;
+    CELL_W = small ? 12 : 10; CELL_H = small ? 18 : 15;
+    steps = small ? 32 : 48;
+    dpr = Math.min(devicePixelRatio || 1, small ? 1.25 : 1.5);
     W = innerWidth; H = innerHeight;
+    document.documentElement.style.setProperty('--vh', (H * .01) + 'px');
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     cols = Math.max(32, Math.round(cv.width / (CELL_W * dpr)));
     rows = Math.max(20, Math.round(cv.height / (CELL_H * dpr)));
@@ -496,6 +501,7 @@ void main(){
   }
   resize();
   addEventListener('resize', resize, { passive: true });
+  visualViewport?.addEventListener('resize', resize, { passive: true });
 
   /* ---- moods per act ---- */
   /* moods per act — p=swell amplitude · spike=chop · spin=flow speed ·
@@ -544,8 +550,11 @@ void main(){
     return { top: scenes[i].docTop - sy, bottom: scenes[i].docTop - sy + el.offsetHeight };
   }
 
-  function draw() {
-    t += .016; scrollVel = lerp(scrollVel, 0, .05);
+  let lastNow = performance.now();
+  function draw(now) {
+    const dt = Math.min(((now || performance.now()) - lastNow) / 1000, .05);
+    lastNow = now || performance.now();
+    t += dt; scrollVel = lerp(scrollVel, 0, .05);
     px = lerp(px, pxx, .05); py = lerp(py, pyy, .05);
     transit *= .93;
     const m = mood();
@@ -556,11 +565,11 @@ void main(){
       sceneP[i] = clamp(-r.top / (scenes[i].el.offsetHeight - H), 0, 1);
       if (r.top <= 0 && r.bottom > 0) {
         phase = capture ? i + sceneP[i] : lerp(phase, i + sceneP[i], .14);
-        if (!capture && Math.floor(phase) !== lastAct) { lastAct = Math.floor(phase); transit = Math.max(transit, .6); }
+        if (!capture && Math.floor(phase) !== lastAct) { lastAct = Math.floor(phase); transit = Math.max(transit, W < 700 ? .4 : .6); }
       }
     }
     /* CRT power-on: the tube strikes a dot, tears to a line, opens the field */
-    const bootE = 1 - Math.pow(1 - Math.min(1, t / 1.7), 3);
+    const bootE = 1 - Math.pow(1 - Math.min(1, t / 1.2), 3);
     const collapse = capture ? 0 : Math.max(transit, 1 - bootE);
 
     /* which of its words is on air */
@@ -587,6 +596,7 @@ void main(){
     gl.uniform1f(u.Ex, m.ex);
     gl.uniform1f(u.Ey, m.ey);
     gl.uniform1f(u.Face, m.face);
+    gl.uniform1f(u.Steps, steps);
     gl.uniform2f(u.PTR, px, py);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
