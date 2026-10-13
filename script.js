@@ -302,12 +302,10 @@ void main(){
   float lum = data.r, thr = data.g;
   vec2 cuv = fract(uv*C);
 
-  /* glyph index: density ramp 0-15, corrupted scramble set 16-31.
-     corruption lives in the dark — bright geometry stays legible */
-  float idx;
+  /* glyph index: clean density ramp everywhere — scramble now lives
+     only in the post pass (tearing/chroma), the field stays detailed */
+  float idx = floor(clamp(lum,0.,.999)*15.99);
   float scr = h2(cell + floor(T*(9.+Glitch*40.))*7.13);
-  if(scr < Glitch*(.03+.26*(1.-lum))) idx = 16.+floor(h2(cell+floor(T*57.))*15.99);
-  else idx = floor(clamp(lum,0.,.999)*15.99);
 
   vec2 guv = vec2((cuv.x-.5)*CellAsp+.5, cuv.y);
   float ink = 0.;
