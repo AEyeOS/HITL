@@ -294,6 +294,7 @@ precision highp float;
 uniform sampler2D SCENE, FB, ATLAS, WORDS;
 uniform vec2 R, C;
 uniform float T, Glitch, CellAsp, WordOn;
+uniform vec3 Decay;
 uniform vec4 WRect;
 float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 void main(){
@@ -328,7 +329,7 @@ void main(){
 
   /* phosphor persistence — history decays, fresh light overwrites */
   vec2 fuv=(uv-.5)*1.0004+.5;
-  vec3 prev=texture2D(FB,fuv).rgb*vec3(.885,.9,.86);
+  vec3 prev=texture2D(FB,fuv).rgb*Decay;
   if(prev.r!=prev.r||prev.g!=prev.g||prev.b!=prev.b) prev=vec3(0.);
   col=max(col,prev);
   gl_FragColor=vec4(clamp(col,0.,1.),1.);
@@ -536,7 +537,7 @@ void main(){
   /* #p= capture mode — skips boot/transient states for verification captures */
   const capture = /p=[\d.]/.test(location.hash);
   addEventListener('scroll', () => {
-    scrollVel = clamp(scrollVel + Math.abs(scrollY - lastScroll) * .12, 0, 9);
+    scrollVel = clamp(scrollVel + Math.abs(scrollY - lastScroll) / H * .35, 0, 9);
     lastScroll = scrollY;
   }, { passive: true });
 
@@ -555,17 +556,20 @@ void main(){
     const dt = Math.min(((now || performance.now()) - lastNow) / 1000, .05);
     lastNow = now || performance.now();
     t += dt; scrollVel = lerp(scrollVel, 0, .05);
+    /* phosphor decay normalized to wall-clock — same trail length at any fps */
+    const df = dt * 60;
+    const dr = Math.pow(.885, df), dg = Math.pow(.9, df), db2 = Math.pow(.86, df);
     px = lerp(px, pxx, .05); py = lerp(py, pyy, .05);
     transit *= .93;
     const m = mood();
-    m.glitch = clamp(m.glitch + scrollVel * .12, 0, 1.4);
+    m.glitch = clamp(m.glitch + scrollVel * .12 * (W < 700 ? .5 : 1), 0, 1.4);
 
     for (let i = 0; i < scenes.length; i++) {
       const r = sceneRect(scenes[i].el, i);
       sceneP[i] = clamp(-r.top / (scenes[i].el.offsetHeight - H), 0, 1);
       if (r.top <= 0 && r.bottom > 0) {
         phase = capture ? i + sceneP[i] : lerp(phase, i + sceneP[i], .14);
-        if (!capture && Math.floor(phase) !== lastAct) { lastAct = Math.floor(phase); transit = Math.max(transit, W < 700 ? .4 : .6); }
+        if (!capture && Math.floor(phase) !== lastAct) { lastAct = Math.floor(phase); transit = Math.max(transit, W < 700 ? .3 : .6); }
       }
     }
     /* CRT power-on: the tube strikes a dot, tears to a line, opens the field */
@@ -615,6 +619,7 @@ void main(){
     gl.uniform2f(progStamp.u.R, cv.width, cv.height);
     gl.uniform2f(progStamp.u.C, cols, rows);
     gl.uniform1f(progStamp.u.T, t);
+    gl.uniform3f(progStamp.u.Decay, dr, dg, db2);
     gl.uniform1f(progStamp.u.Glitch, m.glitch);
     gl.uniform1f(progStamp.u.CellAsp, (cv.width / cols) / (cv.height / rows));
     gl.uniform1f(progStamp.u.WordOn, wordGlow * (.72 + .28 * Math.sin(t * 7.3)));
