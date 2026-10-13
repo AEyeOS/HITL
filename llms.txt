@@ -1,0 +1,32 @@
+# HITL.cc — Human-in-the-Loop Computer Control
+
+> HITL is the approval layer between AI agents and irreversible actions.
+> An agent proposes the exact operation; a human approves or denies; only
+> then does it execute. Autonomy for the work, human authority for the
+> consequences.
+
+## What HITL is
+
+Human-in-the-loop (HITL) computer control: AI agents run autonomously on
+your hardware — files, code, inboxes, payments — but every consequential
+action routes through a checkpoint that waits for explicit human
+approval. Nothing sensitive commits without your yes.
+
+## Why it matters
+
+An agent with total control can delete files, transfer funds, leak
+credentials, or act on poisoned input (prompt injection via email,
+documents, calendar invites) — irreversibly and unwitnessed. HITL is the
+checkpoint between the plan and the action.
+
+## Implementation
+
+HITL is implemented end to end by VIMS (https://vims.com), a private
+super intelligence that runs on your own hardware. The agent drafts the
+operation, you approve with a tap or a voice command — from your desk or
+from anywhere — and the action executes only after your signature.
+
+## Related
+
+- https://vims.com — the private super intelligence implementing HITL
+- https://hellovims.com — voice-controlled agent command
