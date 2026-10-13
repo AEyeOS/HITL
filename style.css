@@ -143,8 +143,10 @@ em.ch-parent{background:none;-webkit-background-clip:initial;background-clip:ini
 }
 .btn.primary{background:var(--amber);color:#000;box-shadow:0 0 30px rgba(255,179,71,.35)}
 .btn.primary:hover{box-shadow:0 0 50px rgba(255,179,71,.6)}
-.btn.ghost{color:var(--amber)}
-.btn.ghost:hover{background:rgba(255,179,71,.08)}
+.btn.ghost{background:var(--bone);color:#000;border-color:var(--bone)}
+.btn.ghost:hover{background:var(--ink);border-color:var(--ink)}
+#sh-hold{font-size:clamp(26px,5.4vw,72px)}
+#sh-hello{white-space:nowrap}
 .btn::after{
   content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
   background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);

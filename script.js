@@ -42,7 +42,7 @@
     'beat1':           [[0,{x:130,o:0}],[.12,{x:0,o:1}],[.28,{o:1}],[.38,{x:-150,o:0}],[1,{x:-150,o:0}]],
     'beat2':           [[0,{x:130,o:0}],[.38,{x:130,o:0}],[.48,{x:0,o:1}],[.62,{o:1}],[.7,{x:-150,o:0}],[1,{x:-150,o:0}]],
     'beat3':           [[0,{x:130,o:0}],[.7,{x:130,o:0}],[.8,{x:0,o:1}],[.94,{o:1}],[1,{x:-150,o:0}]],
-    'sh-hold':         [[0,{x:130,o:0,y:-24}],[.2,{x:0,y:-24,o:1}],[.78,{x:0,o:1}],[1,{x:-140,y:-24,o:0}]],
+    'sh-hold':         [[0,{x:130,o:0,y:-8}],[.2,{x:0,y:-8,o:1}],[.78,{x:0,o:1}],[1,{x:-140,y:-8,o:0}]],
     'sh-hold-note':    [[0,{y:110,o:0}],[.5,{y:38,o:0}],[.64,{y:38,o:1}],[.85,{o:1}],[1,{x:-120,o:0}]],
     'sh-less':         [[0,{x:120,y:-26,o:1}],[.62,{x:-140,y:-26,o:1}],[1,{x:-150,y:-26,o:0}]],
     'sh-more':         [[0,{x:-120,y:26,o:1}],[.68,{x:140,y:26,o:1}],[1,{x:150,y:26,o:0}]],
@@ -691,6 +691,9 @@ void main(){
       const sy = () => (document.documentElement.scrollHeight - innerHeight) * clamp(+pm[1], 0, 1);
       fakeY = sy();
       setTimeout(() => { fakeY = sy(); }, 500);
+      /* sticky stages never trigger without real scroll — pin them so
+         off-viewport shots render in captures */
+      document.querySelectorAll('.stage').forEach(el => { el.style.cssText = 'position:fixed;inset:0'; });
     }
     requestAnimationFrame(draw);
   }
