@@ -1,13 +1,15 @@
-/* HITL.CC v2 — SIGNAL INTERCEPT
-   The page is a compromised SIGINT terminal. The entire world is
-   rendered as phosphor glyphs in WebGL:
+/* HITL.CC v4 — THE SEA
+   The page is a sonar terminal watching open water. The entire world
+   is rendered as phosphor glyphs in WebGL:
 
-   PASS 1 · SCENE (cell-res buffer) — raymarched entity: a rotating
-     icosahedral mass growing corruption spikes, pressing against the
-     authorization boundary; RF waterfall strip; heartbeat trace.
-     Outputs per-cell: r=luminance g=threat.
+   PASS 1 · SCENE (cell-res buffer) — raymarched ocean: swell trains
+     rolling at the camera, a barreling lip that throws a tube around
+     the viewer, storm turbulence, a breakwall with one channel cut
+     through it (your authorization), laminar flow on the calm side,
+     heartbeat ripples on still water.
+     Outputs per-cell: r=luminance g=threat b=sonar strip.
    PASS 2 · STAMP — one glyph per cell from a runtime atlas (density
-     ramp + corrupted scramble set), bone→amber tint, threat→red,
+     ramp + corrupted scramble set), deep-teal→foam tint, threat→red,
      max-blend phosphor persistence (nothing accumulates).
    PASS 3 · DISPLAY — band tearing, chroma split, rolling band,
      scanlines, grain, and the degauss collapse on every act change.
@@ -156,133 +158,134 @@
 
   const VS = `attribute vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
 
-  /* ---- pass 1: the world at cell resolution ----
-     r = luminance (glyph density) · g = threat (red channel) */
+  /* ---- pass 1: the sea at cell resolution ----
+     r = luminance (glyph density) · g = threat (red channel) · b = sonar strip */
   const FS_SCENE = `
 precision highp float;
 uniform vec2 R;
 uniform float T;
 uniform float P, Spike, Spin, Glitch, Threat, Gate, Press, Water, Ekg, Lum, Ex, Ey, Face;
 uniform vec2 PTR;
-mat2 RA, RB; float SC;
+/* BZ lip z · BR lip radius · LCY lip height · BX lateral drift
+   WZ wall z · GX/GAPW the channel you open */
+float BZ,BR,LCY,BX,WZ,GX,GAPW;
 
-float h1(float n){ return fract(sin(n)*43758.5453); }
 float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float h3(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
-float n3(vec3 p){
-  vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
-  return mix(mix(mix(h3(i),h3(i+vec3(1.,0.,0.)),f.x),mix(h3(i+vec3(0.,1.,0.)),h3(i+vec3(1.,1.,0.)),f.x),f.y),
-             mix(mix(h3(i+vec3(0.,0.,1.)),h3(i+vec3(1.,0.,1.)),f.x),mix(h3(i+vec3(0.,1.,1.)),h3(i+vec3(1.,1.,1.)),f.x),f.y),f.z);
+float n2(vec2 p){
+  vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(h2(i),h2(i+vec2(1.,0.)),f.x),mix(h2(i+vec2(0.,1.)),h2(i+vec2(1.,1.)),f.x),f.y);
 }
-float fbm3(vec3 p){ float s=0.,a=.5; for(int i=0;i<4;i++){ s+=a*n3(p); p*=2.1; a*=.5; } return s; }
-mat2 rot(float a){ float c=cos(a),s=sin(a); return mat2(c,-s,s,c); }
+float fbm2(vec2 p){ float s=0.,a=.5; for(int i=0;i<3;i++){ s+=a*n2(p); p*=2.13; a*=.5; } return s; }
 
-float sdIco(vec3 p){
-  float q=(sqrt(5.)-3.)/2.;
-  vec3 n1=normalize(vec3(q,1.,0.));
-  vec3 n2=normalize(vec3(1.,0.,q));
-  vec3 n3=normalize(vec3(0.,q,1.));
-  vec3 a=abs(p);
-  float d=dot(a,normalize(vec3(1.,1.,1.)));
-  d=max(d,dot(a,n1)); d=max(d,dot(a,n2)); d=max(d,dot(a,n3));
-  return d-.62;
+/* ---- the sea surface ---- */
+float seaH(vec2 p){
+  float t=T*Spin;
+  /* long swell trains rolling at the camera */
+  float h = pow(.5+.5*sin(p.y*.5 - t*2.0 + sin(p.x*.17)*.9), 3.)*1.1;
+  /* crossing swell */
+  h += pow(.5+.5*sin(p.y*.95 - t*1.35 + p.x*.45), 4.)*.3;
+  /* wind chop — this is the turbulence */
+  h += fbm2(p*vec2(.6,1.5) + vec2(0., -t*2.2)) * (.06+Spike*.85);
+  h += fbm2(p*3.1 + vec2(-t*.7, -t*1.4)) * Spike * .22;
+  /* heartbeat rings — still water answering your pulse */
+  float r=length(p-vec2(0.,6.2));
+  h += sin(r*6.5 - T*4.)*exp(-r*.4)*.11*Ekg;
+  /* the wall calms the water behind it */
+  h *= mix(1., .25, smoothstep(WZ-.4, WZ+1.4, p.y)*Gate);
+  return h*P;
+}
+
+/* ---- the barrel — a tube thrown toward the camera ---- */
+float lipD(vec3 q){
+  vec2 lp = vec2(q.z-BZ, q.y-LCY);
+  float lip = abs(length(lp)-BR)-.07 + pow(abs(q.x-BX)/9.,4.)*1.5;
+  /* open the arc toward the viewer — a C-section, not a ring */
+  return max(lip, lp.x - BR*.35);
+}
+/* ---- the wall — the boundary with a channel cut through it ---- */
+float wallD(vec3 q){
+  float wl = max(abs(q.z-WZ)-.045, max(abs(q.x)-9., q.y-1.9));
+  return max(wl, -(abs(q.x-GX)-GAPW));
 }
 float map(vec3 q){
-  vec3 p3=q/SC;
-  p3.xz=RA*p3.xz; p3.yz=RB*p3.yz;
-  float spikes=fbm3(p3*2.6+vec3(0.,T*.3,0.));
-  float de=sdIco(p3)-spikes*.34*Spike;
-  /* THE VISAGE — sockets carved in world space. The geometry rotates;
-     the face does not. It is always looking at you. */
-  vec3 pf=q/SC;
-  float socket=min(length(pf-vec3(.26,.16,.38)),length(pf-vec3(-.26,.16,.38)))-.3;
-  float mouth=length((pf-vec3(0.,-.28,.44))*vec3(1.,2.4,1.))-.18;
-  float cut=(min(socket,mouth)-.01)*Face+(1.-Face)*10.;
-  return (max(de,-cut))*SC;
-}
-/* the EKG trace — periodic deflection traveling with T */
-float ekgOff(float x){
-  float u=fract(x*.9 - T*.28);
-  float o=0.;
-  if(u<.05) o=sin(u/.05*3.14159)*.06;
-  else if(u<.08) o=-(u-.05)/.03*.14;
-  else if(u<.12) o=-.14+(u-.08)/.04*.9;
-  else if(u<.16) o=.76-(u-.12)/.04*.96;
-  else if(u<.20) o=-.20+(u-.16)/.04*.20;
-  else if(u<.30) o=sin((u-.20)/.1*3.14159)*.10;
-  return o;
+  float d = q.y - seaH(q.xz);
+  if(Face>.02) d = min(d, lipD(q));
+  if(Gate>.02) d = min(d, wallD(q));
+  return d;
 }
 void main(){
   vec2 uv = gl_FragCoord.xy / R;
-  float lum = .028 + .034*h2(uv*R + floor(T*9.));
+  float lum = .02 + .03*h2(uv*R + floor(T*9.));
   float threat = 0.;
 
-  /* ---- THE ENTITY — a rotating mass of corrupted geometry ---- */
-  SC = .62*P*(1.+.05*sin(T*2.3));
-  RA = rot(T*Spin + PTR.x*1.1);
-  RB = rot(.6 + PTR.y*.8);
-  if(P>.01){
-    /* cells are 10x15 — correct grid aspect by cell aspect for true physical rays */
-    vec2 sp = (uv-vec2(Ex,Ey))*vec2(R.x/R.y*.667,1.)*2.9;
-    vec3 ro=vec3(0.,0.,2.5), rd=normalize(vec3(sp,-1.9));
-    float td=0.,glow=0.,hit=-1.;
-    for(int i=0;i<42;i++){
-      float d=map(ro+rd*td);
-      glow+=exp(-abs(d)*22.)*.022;
-      if(d<.0015){ hit=td; break; }
-      td+=d*.85;
-      if(td>6.) break;
-    }
-    if(hit>0.){
-      vec3 q=ro+rd*hit;
-      vec2 e=vec2(.0018,0.);
-      vec3 n=normalize(vec3(
-        map(q+e.xyy)-map(q-e.xyy),
-        map(q+e.yxy)-map(q-e.yxy),
-        map(q+e.yyx)-map(q-e.yyx)));
-      float dif=clamp(dot(n,normalize(vec3(.5,.8,.6))),0.,1.);
-      float rim=pow(1.-clamp(dot(n,-rd),0.,1.),2.4);
-      /* solid glyph surface — most faces land on dense glyphs */
-      lum += (dif*.6+.42+rim*1.1)*P;
-      threat += rim*Threat*.7 + fbm3(n*6.)*Spike*.3*Threat;
-      /* pupils burning inside the sockets */
-      vec3 pf=q/SC;
-      float pup=exp(-length(pf-vec3(.26,.16,.3))*6.)+exp(-length(pf-vec3(-.26,.16,.3))*6.);
-      lum += pup*Face*5.;
-      threat += pup*Face*Threat;
-      lum += fbm3(q*2.1+vec3(0.,T*.12,0.))*P*.32;
-    }
-    lum += glow*P*1.2;
-    threat += glow*Threat*1.1;
-  }
+  BZ = mix(-26., 7.4, Face);   /* the barrel closes distance as Face rises */
+  BR = mix(.6, 2.55, Face);
+  LCY = .4 + BR*.5;
+  BX = Ex*4.;
+  WZ = 3.4; GX = 1.5; GAPW = .85;
 
-  /* ---- THE BOUNDARY — vertical authorization line at x=.62 ---- */
-  if(Gate>0.){
-    float dl=abs(uv.x-.62);
-    /* the boundary flares only when the entity physically presses it */
-    float gL=Gate*(.22+.78*Press);
-    lum += gL*exp(-dl*R.x*.6)*1.4;
-    lum += gL*step(.42,fract(uv.y*R.y/5.))*exp(-dl*R.x*.35)*.5;
-    /* the line glows hotter where the entity presses it */
-    float pressGlow=exp(-abs(uv.y-Ey)*R.y*.25);
-    threat += Gate*Press*exp(-dl*R.x*.5)*pressGlow*.9;
-    threat += Gate*Press*exp(-dl*R.x*.4)*.3;
-    /* contact: entity surface meeting the line sparks */
-    float edge=Ex+.06*P+.07*Press;
-    float contact=clamp(1.-abs(edge-.62)*16.,0.,1.)*Press;
-    float sput=step(.72,h2(vec2(floor(uv.y*R.y*.9),floor(T*24.))))*exp(-dl*R.x*.85);
-    lum += contact*sput*1.3;
-    threat += contact*sput*Threat*1.2;
-    /* hash marks counting attempts */
-    float tick=step(.97,h2(vec2(floor(uv.y*R.y/2.),floor(T*2.))));
-    lum += gL*tick*exp(-dl*R.x*.35)*.5;
+  /* ---- camera rides the surface, looking out to sea ---- */
+  vec2 sp = (uv-vec2(.5,Ey))*vec2(R.x/R.y*.667,1.)*2.9;
+  vec3 ro = vec3(PTR.x*1.5, 1.15+sin(T*.5)*.05, 9.5);
+  vec3 rd = normalize(vec3(sp.x-PTR.x*1.2, sp.y-PTR.y*.8, -2.3));
+  float td=0., hit=-1.;
+  for(int i=0;i<48;i++){
+    float d=map(ro+rd*td);
+    if(d<.003){ hit=max(td,.01); break; }
+    td+=d*.7;
+    if(td>44.) break;
   }
-
-  /* ---- heartbeat trace ---- */
-  if(Ekg>0.){
-    float ey=.30 - ekgOff(uv.x)*Ekg;
-    lum += Ekg*exp(-abs(uv.y-ey)*R.y*1.3)*(.5+.5*step(.5,fract(T*.4)));
+  if(hit>0.){
+    vec3 q=ro+rd*hit;
+    vec2 e=vec2(.004,0.);
+    vec3 n=normalize(vec3(
+      map(q+e.xyy)-map(q-e.xyy),
+      map(q+e.yxy)-map(q-e.yxy),
+      map(q+e.yyx)-map(q-e.yyx)));
+    float dif=clamp(dot(n,normalize(vec3(-.45,.75,.4))),0.,1.);
+    float dwl = Gate>.02 ? wallD(q) : 9e3;
+    float dlp = Face>.02 ? lipD(q) : 9e3;
+    float ds  = q.y-seaH(q.xz);
+    if(dwl<ds && dwl<dlp){
+      /* THE WALL — glyph concrete, seam lights, running pylons */
+      lum += (.38+.3*h2(floor(q.xy*5.)+floor(q.z*3.)))*Gate;
+      lum += step(.82,fract(q.x*.9))*.3*Gate;             /* pylon seams */
+      lum += step(.94,fract(q.y*3.+T*.5))*.35*Gate*Press; /* warning strobes */
+      threat += Press*step(.85,h3(q*9.+floor(T*6.)))*.7;
+    } else if(dlp<ds){
+      /* THE LIP — thrown whitewater; darker inside the tube */
+      float fm=.5+fbm2(q.xy*6.+vec2(T*3.,0.))*.7;
+      lum += fm*(.4+.6*Face);
+      threat += (.1+Threat*.5)*Face;
+      if(dot(n,-rd)<0.) lum*=.3;
+    } else {
+      /* THE SEA */
+      float steep=clamp(1.-n.y,0.,1.);
+      float crest=smoothstep(.3,.95,q.y/max(P,.2));
+      float foam=clamp(steep*1.6+crest*.9-.8+Spike*.5,0.,1.);
+      foam*=.3+.7*fbm2(q.xz*vec2(4.,1.3)+vec2(0.,-T*2.6));
+      lum += .07+dif*.28+crest*.45+foam*.85;
+      threat += foam*Threat*.45;
+      /* whitewater piling where the sea meets the wall */
+      lum += Press*exp(-abs(q.z-WZ)*1.6)*clamp(q.y*.7,0.,1.)*.6;
+      threat += Press*exp(-abs(q.z-WZ)*1.2)*.5;
+      /* laminar channels — cleared water sliding through your gap */
+      float lam=Gate*clamp(1.-Spike*2.4,0.,1.)*smoothstep(WZ-.3,WZ+.9,q.z);
+      lum += lam*pow(.5+.5*sin((q.x-GX)*2.2+q.z*.35-T*2.4*Spin),7.)*.55;
+    }
+    /* spray — airborne off the lip and the wall */
+    float spr=step(.982,h3(q*11.+floor(T*17.)));
+    lum += spr*(Face*.35+Press*.7);
+    threat += spr*Threat*.5;
+    lum *= exp(-hit*.045); /* distance haze */
+  } else {
+    /* sky — grain, faint stars, horizon haze */
+    lum += smoothstep(Ey,1.,uv.y)*.05;
+    lum += step(.996,h2(uv*R+floor(T*2.)))*.15*(1.-Threat*.5);
   }
+  /* the horizon never ends */
+  lum += exp(-abs(uv.y-Ey)*R.y*.3)*.1;
 
   /* ---- RF waterfall strip (bottom 12%) ---- */
   float wl=0., wt=0.;
@@ -336,12 +339,12 @@ void main(){
   float ink = 0.;
   if(guv.x>=0. && guv.x<=1.) ink = texture2D(ATLAS,vec2((idx+guv.x)/32.,guv.y)).r;
 
-  vec3 bone=vec3(.96,.9,.76), amber=vec3(1.,.68,.28), red=vec3(1.,.18,.24);
-  vec3 tint=mix(bone*.5,amber,clamp(lum*1.5-.12,0.,1.));
+  vec3 deep=vec3(.12,.45,.4), foamc=vec3(.82,1.,.93), red=vec3(1.,.18,.24);
+  vec3 tint=mix(deep*.55,foamc,clamp(lum*1.5-.12,0.,1.));
   vec3 col=tint*ink;
   col=mix(col,red*ink*1.15,clamp(thr*1.7,0.,1.));
   col+=red*thr*.06;
-  col+=vec3(1.,.72,.3)*exp(-dc*dc*24.)*.05; /* cursor halo */
+  col+=vec3(.6,1.,.85)*exp(-dc*dc*24.)*.06; /* cursor halo */
 
   /* THE MACHINE SPEAKS — a band of cells resolves into its words */
   if(cell.x>=WRect.x && cell.x<WRect.x+WRect.z && cell.y>=WRect.y && cell.y<WRect.y+WRect.w){
@@ -443,7 +446,7 @@ void main(){
   }
 
   /* ---- its voice: pre-rendered word masks ---- */
-  const WORD_LINES = { 2: 'I SEE YOU', 4: 'LET ME THROUGH', 6: 'I WAIT.' };
+  const WORD_LINES = { 2: 'I CREST.', 4: 'I BREAK AT THE LINE.', 6: 'I WAIT.' };
   const wordTex = {};
   function buildWords() {
     for (const a in WORD_LINES) {
@@ -524,14 +527,18 @@ void main(){
   addEventListener('resize', resize, { passive: true });
 
   /* ---- moods per act ---- */
+  /* moods per act — p=swell amplitude · spike=chop · spin=flow speed ·
+     glitch=scramble · threat=red · gate=the wall · press=impact spray ·
+     water=sonar strip · ekg=ripple rings · ex=lip drift · ey=horizon ·
+     face=barrel approach/curl */
   const MOODS = [
-    { p: .2,  spike: .1,  spin: .5,  glitch: .15, threat: .05, gate: 0,  press: 0,  water: .5, ekg: 0,  lum: 1,   ex: .5,  ey: .5,  face: 0 },
-    { p: .9,  spike: .3,  spin: .9,  glitch: .35, threat: .2,  gate: 0,  press: 0,  water: .9, ekg: 0,  lum: 1,   ex: .5,  ey: .48, face: .5 },
-    { p: 1.05, spike: .95, spin: 1.3, glitch: .95, threat: .9,  gate: 0,  press: 0,  water: 1,  ekg: 0,  lum: 1,   ex: .5,  ey: .46, face: 1 },
-    { p: 1.0, spike: .7,  spin: .7,  glitch: .6,  threat: .95, gate: 1,  press: 1,  water: .7, ekg: 0,  lum: 1,   ex: .49, ey: .5,  face: 1 },
-    { p: .95, spike: .5,  spin: .5,  glitch: .35, threat: .5,  gate: 1,  press: .7, water: .5, ekg: 0,  lum: 1,   ex: .44, ey: .5,  face: .8 },
-    { p: .5,  spike: .15, spin: .4,  glitch: .15, threat: .15, gate: 0,  press: 0,  water: .4, ekg: 1,  lum: 1,   ex: .5,  ey: .48, face: .3 },
-    { p: .35, spike: .1,  spin: .5,  glitch: .1,  threat: .1,  gate: .8, press: .4, water: .4, ekg: .4, lum: 1.1, ex: .5,  ey: .48, face: .4 },
+    { p: .6,  spike: .12, spin: .8,  glitch: .12, threat: .05, gate: 0,  press: 0,   water: .6, ekg: 0,   lum: 1,   ex: 0, ey: .62, face: .08 },
+    { p: .8,  spike: .2,  spin: .95, glitch: .2,  threat: .12, gate: 0,  press: 0,   water: .8, ekg: 0,   lum: 1,   ex: 0, ey: .62, face: .3 },
+    { p: 1.05, spike: .5, spin: 1.1, glitch: .55, threat: .3,  gate: 0,  press: 0,   water: 1,  ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: 1 },
+    { p: 1.0, spike: .7,  spin: 1.,  glitch: .5,  threat: .8,  gate: 1,  press: 1,   water: .7, ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: .7 },
+    { p: .95, spike: .8,  spin: .9,  glitch: .55, threat: .65, gate: 1,  press: .75, water: .5, ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: .4 },
+    { p: .7,  spike: .12, spin: 1.3, glitch: .2,  threat: .15, gate: 1,  press: .25, water: .5, ekg: .25, lum: 1,   ex: 0, ey: .6,  face: .12 },
+    { p: .35, spike: .05, spin: .6,  glitch: .1,  threat: .05, gate: .7, press: .15, water: .4, ekg: .8,  lum: 1.1, ex: 0, ey: .6,  face: .08 },
   ];
   const MK = Object.keys(MOODS[0]);
   let phase = 0;
@@ -551,13 +558,14 @@ void main(){
 
   /* ---- intercept log ---- */
   const LOGS = [
-    [.15, 'SIG:4417 intercept open'],
-    [1.15, 'ORIGIN: internal — not a transmission'],
-    [2.2, 'PAYLOAD: exfil ~/.ssh/id_rsa'],
-    [2.75, 'PAYLOAD: drop table users'],
-    [3.3, 'AUTH REQUIRED — holding'],
-    [4.4, 'HELD — queue depth: all of it'],
-    [5.4, 'KEY: human signature only'],
+    [.15, 'SONAR:4417 — swell detected'],
+    [1.15, 'SET: wave trains inbound'],
+    [2.2, 'CREST: pitching — tube forming'],
+    [2.8, 'IMPACT VECTOR: everything'],
+    [3.3, 'WALL: authorization required'],
+    [4.4, 'HELD — it pounds, it waits'],
+    [5.4, 'CHANNEL: cleared by your key'],
+    [6.3, 'STATE: still water'],
   ];
   const logEl = document.createElement('div');
   logEl.className = 'log';

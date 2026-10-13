@@ -1,12 +1,12 @@
 /* HITL.CC — intercept terminal. Bone/amber phosphor, threat red, true black. */
 :root{
-  --bg:#030302;
-  --ink:#e9e2cf;
-  --dim:#6e6a58;
-  --amber:#ffb347;
-  --bone:#f4ecd8;
+  --bg:#020505;
+  --ink:#d5ece2;
+  --dim:#4d6a63;
+  --amber:#3fd9b2;
+  --bone:#eafff4;
   --red:#ff3040;
-  --line:rgba(255,179,71,.16);
+  --line:rgba(63,217,178,.16);
   --mono:'JetBrains Mono',ui-monospace,monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box}
