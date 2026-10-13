@@ -162,7 +162,7 @@
 precision highp float;
 uniform vec2 R;
 uniform float T;
-uniform float P, Spike, Spin, Glitch, Threat, Gate, Press, Water, Ekg, Lum, Ex, Ey;
+uniform float P, Spike, Spin, Glitch, Threat, Gate, Press, Water, Ekg, Lum, Ex, Ey, Face;
 uniform vec2 PTR;
 mat2 RA, RB; float SC;
 
@@ -191,7 +191,14 @@ float map(vec3 q){
   vec3 p3=q/SC;
   p3.xz=RA*p3.xz; p3.yz=RB*p3.yz;
   float spikes=fbm3(p3*2.6+vec3(0.,T*.3,0.));
-  return (sdIco(p3)-spikes*.34*Spike)*SC;
+  float de=sdIco(p3)-spikes*.34*Spike;
+  /* THE VISAGE — sockets carved in world space. The geometry rotates;
+     the face does not. It is always looking at you. */
+  vec3 pf=q/SC;
+  float socket=min(length(pf-vec3(.26,.16,.38)),length(pf-vec3(-.26,.16,.38)))-.3;
+  float mouth=length((pf-vec3(0.,-.28,.44))*vec3(1.,2.4,1.))-.18;
+  float cut=(min(socket,mouth)-.01)*Face+(1.-Face)*10.;
+  return (max(de,-cut))*SC;
 }
 /* the EKG trace — periodic deflection traveling with T */
 float ekgOff(float x){
@@ -211,16 +218,17 @@ void main(){
   float threat = 0.;
 
   /* ---- THE ENTITY — a rotating mass of corrupted geometry ---- */
-  SC = .5*P*(1.+.05*sin(T*2.3));
+  SC = .62*P*(1.+.05*sin(T*2.3));
   RA = rot(T*Spin + PTR.x*1.1);
   RB = rot(.6 + PTR.y*.8);
   if(P>.01){
-    vec2 sp = (uv-vec2(Ex,Ey))*vec2(R.x/R.y,1.)*2.5;
+    /* cells are 10x15 — correct grid aspect by cell aspect for true physical rays */
+    vec2 sp = (uv-vec2(Ex,Ey))*vec2(R.x/R.y*.667,1.)*2.9;
     vec3 ro=vec3(0.,0.,2.5), rd=normalize(vec3(sp,-1.9));
     float td=0.,glow=0.,hit=-1.;
     for(int i=0;i<42;i++){
       float d=map(ro+rd*td);
-      glow+=exp(-abs(d)*9.)*.028;
+      glow+=exp(-abs(d)*22.)*.022;
       if(d<.0015){ hit=td; break; }
       td+=d*.85;
       if(td>6.) break;
@@ -235,8 +243,14 @@ void main(){
       float dif=clamp(dot(n,normalize(vec3(.5,.8,.6))),0.,1.);
       float rim=pow(1.-clamp(dot(n,-rd),0.,1.),2.4);
       /* solid glyph surface — most faces land on dense glyphs */
-      lum += (dif*.5+.32+rim*.9)*P;
+      lum += (dif*.6+.42+rim*1.1)*P;
       threat += rim*Threat*.7 + fbm3(n*6.)*Spike*.3*Threat;
+      /* pupils burning inside the sockets */
+      vec3 pf=q/SC;
+      float pup=exp(-length(pf-vec3(.26,.16,.3))*6.)+exp(-length(pf-vec3(-.26,.16,.3))*6.);
+      lum += pup*Face*5.;
+      threat += pup*Face*Threat;
+      lum += fbm3(q*2.1+vec3(0.,T*.12,0.))*P*.32;
     }
     lum += glow*P*1.2;
     threat += glow*Threat*1.1;
@@ -245,21 +259,23 @@ void main(){
   /* ---- THE BOUNDARY — vertical authorization line at x=.62 ---- */
   if(Gate>0.){
     float dl=abs(uv.x-.62);
-    lum += Gate*exp(-dl*R.x*.6)*1.6;
-    lum += Gate*step(.42,fract(uv.y*R.y/5.))*exp(-dl*R.x*.35)*.45;
+    /* the boundary flares only when the entity physically presses it */
+    float gL=Gate*(.22+.78*Press);
+    lum += gL*exp(-dl*R.x*.6)*1.4;
+    lum += gL*step(.42,fract(uv.y*R.y/5.))*exp(-dl*R.x*.35)*.5;
     /* the line glows hotter where the entity presses it */
     float pressGlow=exp(-abs(uv.y-Ey)*R.y*.25);
     threat += Gate*Press*exp(-dl*R.x*.5)*pressGlow*.9;
     threat += Gate*Press*exp(-dl*R.x*.4)*.3;
     /* contact: entity surface meeting the line sparks */
-    float edge=Ex+.17*P+.13*Press;
+    float edge=Ex+.06*P+.07*Press;
     float contact=clamp(1.-abs(edge-.62)*16.,0.,1.)*Press;
     float sput=step(.72,h2(vec2(floor(uv.y*R.y*.9),floor(T*24.))))*exp(-dl*R.x*.85);
     lum += contact*sput*1.3;
     threat += contact*sput*Threat*1.2;
     /* hash marks counting attempts */
     float tick=step(.97,h2(vec2(floor(uv.y*R.y/2.),floor(T*2.))));
-    lum += Gate*tick*exp(-dl*R.x*.35)*.5;
+    lum += gL*tick*exp(-dl*R.x*.35)*.5;
   }
 
   /* ---- heartbeat trace ---- */
@@ -292,9 +308,10 @@ void main(){
   /* ---- pass 2: stamp one glyph per cell + phosphor persistence ---- */
   const FS_STAMP = `
 precision highp float;
-uniform sampler2D SCENE, FB, ATLAS;
-uniform vec2 R, C;
-uniform float T, Glitch, CellAsp;
+uniform sampler2D SCENE, FB, ATLAS, WORDS;
+uniform vec2 R, C, PTR2;
+uniform float T, Glitch, CellAsp, WordOn;
+uniform vec4 WRect;
 float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 void main(){
   vec2 uv = gl_FragCoord.xy / R;
@@ -310,6 +327,10 @@ void main(){
   if(scr < Glitch*(.03+.26*(1.-lum))) idx = 16.+floor(h2(cell+floor(T*57.))*15.99);
   else idx = floor(clamp(lum,0.,.999)*15.99);
 
+  /* YOUR CURSOR IS LIGHT — presence decrypts the field it touches */
+  float dc = distance(uv, PTR2);
+  if(dc < .16) idx = floor(clamp(lum,0.,.999)*15.99);
+
   if(data.b>.5) idx = floor(clamp(lum,0.,.999)*15.99); /* waterfall stays clean */
   vec2 guv = vec2((cuv.x-.5)*CellAsp+.5, cuv.y);
   float ink = 0.;
@@ -320,9 +341,18 @@ void main(){
   vec3 col=tint*ink;
   col=mix(col,red*ink*1.15,clamp(thr*1.7,0.,1.));
   col+=red*thr*.06;
+  col+=vec3(1.,.72,.3)*exp(-dc*dc*24.)*.05; /* cursor halo */
+
+  /* THE MACHINE SPEAKS — a band of cells resolves into its words */
+  if(cell.x>=WRect.x && cell.x<WRect.x+WRect.z && cell.y>=WRect.y && cell.y<WRect.y+WRect.w){
+    vec2 wuv=vec2((cell.x-WRect.x+cuv.x)/WRect.z,1.-(cell.y-WRect.y+cuv.y)/WRect.w);
+    float wk=texture2D(WORDS,wuv).r;
+    if(scr<.09) wk*=h2(cell+floor(T*23.)); /* its voice corrupts at the edges */
+    col=mix(col,vec3(1.,.92,.75),wk*WordOn); /* bone — cuts through the red mass */
+  }
 
   /* phosphor persistence — history decays, fresh light overwrites */
-  vec2 fuv=(uv-.5)*1.0015+.5;
+  vec2 fuv=(uv-.5)*1.0004+.5;
   vec3 prev=texture2D(FB,fuv).rgb*vec3(.885,.9,.86);
   if(prev.r!=prev.r||prev.g!=prev.g||prev.b!=prev.b) prev=vec3(0.);
   col=max(col,prev);
@@ -338,6 +368,9 @@ uniform float T, Glitch, Collapse;
 float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 void main(){
   vec2 uv = gl_FragCoord.xy/R;
+  /* CRT barrel curvature */
+  vec2 cc=uv-.5;
+  uv+=cc*dot(cc,cc)*.055;
   float band=floor(uv.y*48.);
   float torn=step(1.-Glitch*.42,h2(vec2(band,floor(T*11.))));
   uv.x+=(h2(vec2(band*1.7,floor(T*23.)))-.5)*.11*torn;
@@ -355,6 +388,7 @@ void main(){
   col+=(h2(uv*fract(T)*371.)-.5)*.05;
   col*=1.-smoothstep(.82,1.,Collapse);
   col*=smoothstep(1.18,.34,distance(uv,vec2(.5)));
+  if(uv.x<0.||uv.x>1.||uv.y<0.||uv.y>1.) col=vec3(0.);
   gl_FragColor=vec4(col,1.);
 }`;
 
@@ -396,6 +430,39 @@ void main(){
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return { tex, fbo };
   }
+
+  function texFromCanvas(c) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return tex;
+  }
+
+  /* ---- its voice: pre-rendered word masks ---- */
+  const WORD_LINES = { 2: 'I SEE YOU', 4: 'LET ME THROUGH', 6: 'I WAIT.' };
+  const wordTex = {};
+  function buildWords() {
+    for (const a in WORD_LINES) {
+      const str = WORD_LINES[a];
+      const c = document.createElement('canvas');
+      c.width = 560; c.height = 96;
+      const x = c.getContext('2d');
+      x.fillStyle = '#000'; x.fillRect(0, 0, 560, 96);
+      x.fillStyle = '#fff';
+      x.font = '800 52px "JetBrains Mono",monospace';
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      const sp = 40, w0 = (str.length - 1) * sp;
+      let sx = 280 - w0 / 2;
+      for (const ch of str) { x.fillText(ch, sx, 52); sx += sp; }
+      wordTex[a] = texFromCanvas(c);
+    }
+  }
+  buildWords();
+  document.fonts?.ready.then(buildWords); /* redraw once the real font lands */
 
   /* ---- glyph atlas: 16-density ramp + 16 corrupted scramble glyphs ---- */
   const GLYPHS = ' .·:;~=+*x#%@◉▓█'.split('').concat('╳◢◣◤◥▚▞░◖◗◈☰ΞΨΩΔ'.split(''));
@@ -458,13 +525,13 @@ void main(){
 
   /* ---- moods per act ---- */
   const MOODS = [
-    { p: .2,  spike: .1,  spin: .5,  glitch: .15, threat: .05, gate: 0,  press: 0,  water: .5, ekg: 0,  lum: 1,   ex: .5,  ey: .5 },
-    { p: .9,  spike: .3,  spin: .9,  glitch: .35, threat: .2,  gate: 0,  press: 0,  water: .9, ekg: 0,  lum: 1,   ex: .5,  ey: .48 },
-    { p: 1.05, spike: .95, spin: 1.3, glitch: .95, threat: .9,  gate: 0,  press: 0,  water: 1,  ekg: 0,  lum: 1,   ex: .5,  ey: .46 },
-    { p: 1.0, spike: .7,  spin: .7,  glitch: .6,  threat: .95, gate: 1,  press: 1,  water: .7, ekg: 0,  lum: 1,   ex: .46, ey: .5 },
-    { p: .95, spike: .5,  spin: .5,  glitch: .35, threat: .5,  gate: 1,  press: .7, water: .5, ekg: 0,  lum: 1,   ex: .44, ey: .5 },
-    { p: .5,  spike: .15, spin: .4,  glitch: .15, threat: .15, gate: 0,  press: 0,  water: .4, ekg: 1,  lum: 1,   ex: .5,  ey: .48 },
-    { p: .35, spike: .1,  spin: .5,  glitch: .1,  threat: .1,  gate: .8, press: .4, water: .4, ekg: .4, lum: 1.1, ex: .5,  ey: .48 },
+    { p: .2,  spike: .1,  spin: .5,  glitch: .15, threat: .05, gate: 0,  press: 0,  water: .5, ekg: 0,  lum: 1,   ex: .5,  ey: .5,  face: 0 },
+    { p: .9,  spike: .3,  spin: .9,  glitch: .35, threat: .2,  gate: 0,  press: 0,  water: .9, ekg: 0,  lum: 1,   ex: .5,  ey: .48, face: .5 },
+    { p: 1.05, spike: .95, spin: 1.3, glitch: .95, threat: .9,  gate: 0,  press: 0,  water: 1,  ekg: 0,  lum: 1,   ex: .5,  ey: .46, face: 1 },
+    { p: 1.0, spike: .7,  spin: .7,  glitch: .6,  threat: .95, gate: 1,  press: 1,  water: .7, ekg: 0,  lum: 1,   ex: .49, ey: .5,  face: 1 },
+    { p: .95, spike: .5,  spin: .5,  glitch: .35, threat: .5,  gate: 1,  press: .7, water: .5, ekg: 0,  lum: 1,   ex: .44, ey: .5,  face: .8 },
+    { p: .5,  spike: .15, spin: .4,  glitch: .15, threat: .15, gate: 0,  press: 0,  water: .4, ekg: 1,  lum: 1,   ex: .5,  ey: .48, face: .3 },
+    { p: .35, spike: .1,  spin: .5,  glitch: .1,  threat: .1,  gate: .8, press: .4, water: .4, ekg: .4, lum: 1.1, ex: .5,  ey: .48, face: .4 },
   ];
   const MK = Object.keys(MOODS[0]);
   let phase = 0;
@@ -482,7 +549,31 @@ void main(){
     pxx = (e.clientX / W - .5); pyy = (e.clientY / H - .5);
   }, { passive: true });
 
-  let t = 0, scrollVel = 0, lastScroll = scrollY, transit = 0, lastAct = 0;
+  /* ---- intercept log ---- */
+  const LOGS = [
+    [.15, 'SIG:4417 intercept open'],
+    [1.15, 'ORIGIN: internal — not a transmission'],
+    [2.2, 'PAYLOAD: exfil ~/.ssh/id_rsa'],
+    [2.75, 'PAYLOAD: drop table users'],
+    [3.3, 'AUTH REQUIRED — holding'],
+    [4.4, 'HELD — queue depth: all of it'],
+    [5.4, 'KEY: human signature only'],
+  ];
+  const logEl = document.createElement('div');
+  logEl.className = 'log';
+  document.body.appendChild(logEl);
+  let logIdx = 0;
+  function pushLog(txt) {
+    const line = document.createElement('div');
+    line.textContent = '> ' + txt;
+    logEl.appendChild(line);
+    requestAnimationFrame(() => line.classList.add('on'));
+    while (logEl.children.length > 4) logEl.firstChild.remove();
+  }
+
+  let t = 0, scrollVel = 0, lastScroll = scrollY, transit = 0, lastAct = 0, wordGlow = 0;
+  /* #p= capture mode — skips boot/transient states for verification captures */
+  const capture = /p=[\d.]/.test(location.hash);
   addEventListener('scroll', () => {
     scrollVel = clamp(scrollVel + Math.abs(scrollY - lastScroll) * .12, 0, 9);
     lastScroll = scrollY;
@@ -509,10 +600,20 @@ void main(){
       const r = sceneRect(scenes[i].el, i);
       sceneP[i] = clamp(-r.top / (scenes[i].el.offsetHeight - H), 0, 1);
       if (r.top <= 0 && r.bottom > 0) {
-        phase = lerp(phase, i + sceneP[i], .14);
-        if (Math.floor(phase) !== lastAct) { lastAct = Math.floor(phase); transit = Math.max(transit, .6); }
+        phase = capture ? i + sceneP[i] : lerp(phase, i + sceneP[i], .14);
+        if (!capture && Math.floor(phase) !== lastAct) { lastAct = Math.floor(phase); transit = Math.max(transit, .6); }
       }
     }
+    while (logIdx < LOGS.length && phase >= LOGS[logIdx][0]) pushLog(LOGS[logIdx++][1]);
+
+    /* CRT power-on: the tube strikes a dot, tears to a line, opens the field */
+    const bootE = 1 - Math.pow(1 - Math.min(1, t / 1.7), 3);
+    const collapse = capture ? 0 : Math.max(transit, 1 - bootE);
+
+    /* which of its words is on air */
+    let wAct = -1;
+    for (const a in WORD_LINES) if (sceneP[a] > .18 && sceneP[a] < .92) wAct = +a;
+    wordGlow = lerp(wordGlow, wAct >= 0 ? 1 : 0, .09);
 
     /* ---- pass 1: scene → cell buffer ---- */
     gl.bindFramebuffer(gl.FRAMEBUFFER, tScene.fbo);
@@ -533,6 +634,7 @@ void main(){
     gl.uniform1f(u.Lum, m.lum);
     gl.uniform1f(u.Ex, m.ex);
     gl.uniform1f(u.Ey, m.ey);
+    gl.uniform1f(u.Face, m.face);
     gl.uniform2f(u.PTR, px, py);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
@@ -543,26 +645,37 @@ void main(){
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tScene.tex);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fbA.tex);
     gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, atlasTex);
+    gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, wAct >= 0 && wordTex[wAct] ? wordTex[wAct] : atlasTex);
     gl.uniform1i(progStamp.u.SCENE, 0);
     gl.uniform1i(progStamp.u.FB, 1);
     gl.uniform1i(progStamp.u.ATLAS, 2);
+    gl.uniform1i(progStamp.u.WORDS, 3);
     gl.uniform2f(progStamp.u.R, cv.width, cv.height);
     gl.uniform2f(progStamp.u.C, cols, rows);
     gl.uniform1f(progStamp.u.T, t);
     gl.uniform1f(progStamp.u.Glitch, m.glitch);
     gl.uniform1f(progStamp.u.CellAsp, (cv.width / cols) / (cv.height / rows));
+    gl.uniform2f(progStamp.u.PTR2, .5 + px, .5 - py);
+    gl.uniform1f(progStamp.u.WordOn, wordGlow * (.72 + .28 * Math.sin(t * 7.3)));
+    if (wAct >= 0) {
+      const rw = Math.min(cols - 6, Math.ceil(WORD_LINES[wAct].length * 2.6));
+      /* band sits across the entity's eyes — it speaks through its own face */
+      gl.uniform4f(progStamp.u.WRect, Math.floor((cols - rw) / 2), Math.floor(rows * .5) - 3, rw, 6);
+    } else {
+      gl.uniform4f(progStamp.u.WRect, 0, 0, 0, 0);
+    }
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     /* ---- pass 3: display post → screen ---- */
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, cv.width, cv.height);
     bindQuad(progDisp);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fbB.tex);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, location.hash.includes('raw') ? tScene.tex : fbB.tex);
     gl.uniform1i(progDisp.u.IMG, 0);
     gl.uniform2f(progDisp.u.R, cv.width, cv.height);
     gl.uniform1f(progDisp.u.T, t);
     gl.uniform1f(progDisp.u.Glitch, m.glitch);
-    gl.uniform1f(progDisp.u.Collapse, transit);
+    gl.uniform1f(progDisp.u.Collapse, collapse);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     const tmp = fbA; fbA = fbB; fbB = tmp;
