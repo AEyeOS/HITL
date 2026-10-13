@@ -4,10 +4,9 @@
 
    PASS 1 · SCENE (cell-res buffer) — raymarched ocean: swell trains
      rolling at the camera, a barreling lip that throws a tube around
-     the viewer, storm turbulence, a breakwall with one channel cut
-     through it (your authorization), laminar flow on the calm side,
-     heartbeat ripples on still water.
-     Outputs per-cell: r=luminance g=threat b=sonar strip.
+     the viewer, storm turbulence, a breakwall (your authorization),
+     laminar flow on the calm side, heartbeat ripples on still water.
+     Outputs per-cell: r=luminance g=threat.
    PASS 2 · STAMP — one glyph per cell from a runtime atlas (density
      ramp + corrupted scramble set), deep-teal→foam tint, threat→red,
      max-blend phosphor persistence (nothing accumulates).
@@ -33,7 +32,6 @@
   const KF = {
     'sh-title':        [[0,{o:1,s:1,y:0}],[.55,{o:1,y:0}],[1,{x:-40,y:-60,o:0,s:1.15}]],
     'sh-cue':          [[0,{o:.9}],[.25,{o:0}]],
-    'sh-strip1':       [[0,{x:60,y:-21,o:1}],[1,{x:-60,y:-21,o:1}]],
     'sh-strip2':       [[0,{x:-60,y:21,o:1}],[1,{x:60,y:21,o:1}]],
     'sh-origin':       [[0,{x:130,o:0}],[.18,{x:0,o:1,s:1}],[.72,{x:0,o:1}],[.95,{x:-140,o:0}],[1,{x:-140,o:0}]],
     'sh-origin-note':  [[0,{y:110,o:0}],[.4,{y:32,o:0}],[.52,{y:32,o:1}],[.75,{o:1}],[.92,{x:-120,o:0}],[1,{x:-120,o:0}]],
@@ -136,16 +134,6 @@
     return k[k.length - 1][1];
   }
 
-  /* ---- HUD clock ---- */
-  const hudClock = $('hud-clock');
-  if (hudClock) setInterval(() => {
-    const d = new Date();
-    hudClock.textContent =
-      String(d.getUTCHours()).padStart(2, '0') + ':' +
-      String(d.getUTCMinutes()).padStart(2, '0') + ':' +
-      String(d.getUTCSeconds()).padStart(2, '0') + 'Z';
-  }, 1000);
-
   /* ============ B · GLYPH WORLD (WebGL) ============ */
   const cv = $('stage');
   const gl = cv.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'high-performance' });
@@ -159,16 +147,15 @@
   const VS = `attribute vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
 
   /* ---- pass 1: the sea at cell resolution ----
-     r = luminance (glyph density) · g = threat (red channel) · b = sonar strip */
+     r = luminance (glyph density) · g = threat (red channel) */
   const FS_SCENE = `
 precision highp float;
 uniform vec2 R;
 uniform float T;
-uniform float P, Spike, Spin, Glitch, Threat, Gate, Press, Water, Ekg, Lum, Ex, Ey, Face;
+uniform float P, Spike, Spin, Glitch, Threat, Gate, Press, Ekg, Lum, Ex, Ey, Face;
 uniform vec2 PTR;
-/* BZ lip z · BR lip radius · LCY lip height · BX lateral drift
-   WZ wall z · GX/GAPW the channel you open */
-float BZ,BR,LCY,BX,WZ,GX,GAPW;
+/* BZ lip z · BR lip radius · LCY lip height · BX lateral drift · WZ wall z */
+float BZ,BR,LCY,BX,WZ;
 
 float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float h3(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
@@ -203,10 +190,9 @@ float lipD(vec3 q){
   /* open the arc toward the viewer — a C-section, not a ring */
   return max(lip, lp.x - BR*.35);
 }
-/* ---- the wall — the boundary with a channel cut through it ---- */
+/* ---- the wall — a solid line it cannot cross ---- */
 float wallD(vec3 q){
-  float wl = max(abs(q.z-WZ)-.045, max(abs(q.x)-9., q.y-1.9));
-  return max(wl, -(abs(q.x-GX)-GAPW));
+  return max(abs(q.z-WZ)-.045, max(abs(q.x)-9., q.y-1.9));
 }
 float map(vec3 q){
   float d = q.y - seaH(q.xz);
@@ -223,7 +209,7 @@ void main(){
   BR = mix(.6, 2.55, Face);
   LCY = .4 + BR*.5;
   BX = Ex*4.;
-  WZ = 3.4; GX = 1.5; GAPW = .85;
+  WZ = 3.4;
 
   /* ---- camera rides the surface, looking out to sea ---- */
   vec2 sp = (uv-vec2(.5,Ey))*vec2(R.x/R.y*.667,1.)*2.9;
@@ -273,13 +259,9 @@ void main(){
       /* whitewater piling where the sea meets the wall */
       lum += Press*exp(-abs(q.z-WZ)*1.6)*clamp(q.y*.7,0.,1.)*.6;
       threat += Press*exp(-abs(q.z-WZ)*1.2)*.5;
-      /* laminar channels — cleared water sliding through your gap */
+      /* cleared water — signed flow passes through the line, glass-calm */
       float lam=Gate*clamp(1.-Spike*2.4,0.,1.)*smoothstep(WZ-.3,WZ+.9,q.z);
-      lum += lam*pow(.5+.5*sin((q.x-GX)*2.2+q.z*.35-T*2.4*Spin),7.)*.55;
-      /* the gap — water bursts through where you cleared it */
-      float gapGlow=exp(-abs(q.x-GX)*2.2)*exp(-abs(q.z-WZ)*1.8);
-      lum += Gate*gapGlow*(.3+.4*sin(T*6.+q.z*8.))*.9;
-      lum += lam*exp(-abs(q.x-GX)*1.4)*exp(-max(0.,WZ-q.z)*.3)*.8;
+      lum += lam*pow(.5+.5*sin(q.x*2.2+q.z*.35-T*2.4*Spin),7.)*.6;
     }
     /* spray — airborne off the lip and the wall */
     float spr=step(.982,h3(q*11.+floor(T*17.)));
@@ -295,17 +277,6 @@ void main(){
   /* the horizon never ends */
   lum += exp(-abs(uv.y-Ey)*R.y*.3)*.1;
 
-  /* ---- RF waterfall strip (bottom 12%) ---- */
-  float wl=0., wt=0.;
-  if(uv.y<.12){
-    float spec=h2(vec2(floor(uv.x*R.x),floor(uv.y*R.y-T*15.)));
-    wl=smoothstep(.42,1.,spec)*.5*Water*(.75+.25*sin(uv.x*46.+T));
-    wt=step(.984,spec)*Water;
-  }
-  float wf=step(uv.y,.12);
-  lum=mix(lum,wl,wf); threat=mix(threat,wt,wf);
-  lum += exp(-abs(uv.y-.12)*R.y*.7)*.28*Water;
-
   /* ---- decrypt band: a row of cells where intent resolves ---- */
   float db=exp(-abs(uv.y-.5)*24.)*Glitch;
   float cell=floor(uv.x*R.x);
@@ -313,14 +284,14 @@ void main(){
 
   /* sanitize: one NaN cell poisons the phosphor buffer forever */
   if(lum!=lum) lum=0.; if(threat!=threat) threat=0.;
-  gl_FragColor=vec4(min(lum*Lum,1.),min(threat,1.),wf,1.);
+  gl_FragColor=vec4(min(lum*Lum,1.),min(threat,1.),0.,1.);
 }`;
 
   /* ---- pass 2: stamp one glyph per cell + phosphor persistence ---- */
   const FS_STAMP = `
 precision highp float;
 uniform sampler2D SCENE, FB, ATLAS, WORDS;
-uniform vec2 R, C, PTR2;
+uniform vec2 R, C;
 uniform float T, Glitch, CellAsp, WordOn;
 uniform vec4 WRect;
 float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
@@ -338,11 +309,6 @@ void main(){
   if(scr < Glitch*(.03+.26*(1.-lum))) idx = 16.+floor(h2(cell+floor(T*57.))*15.99);
   else idx = floor(clamp(lum,0.,.999)*15.99);
 
-  /* YOUR CURSOR IS LIGHT — presence decrypts the field it touches */
-  float dc = distance(uv, PTR2);
-  if(dc < .16) idx = floor(clamp(lum,0.,.999)*15.99);
-
-  if(data.b>.5) idx = floor(clamp(lum,0.,.999)*15.99); /* waterfall stays clean */
   vec2 guv = vec2((cuv.x-.5)*CellAsp+.5, cuv.y);
   float ink = 0.;
   if(guv.x>=0. && guv.x<=1.) ink = texture2D(ATLAS,vec2((idx+guv.x)/32.,guv.y)).r;
@@ -352,7 +318,6 @@ void main(){
   vec3 col=tint*ink;
   col=mix(col,red*ink*1.15,clamp(thr*1.7,0.,1.));
   col+=red*thr*.06;
-  col+=vec3(.6,1.,.85)*exp(-dc*dc*24.)*.06; /* cursor halo */
 
   /* THE MACHINE SPEAKS — a band of cells resolves into its words */
   if(cell.x>=WRect.x && cell.x<WRect.x+WRect.z && cell.y>=WRect.y && cell.y<WRect.y+WRect.w){
@@ -537,16 +502,15 @@ void main(){
   /* ---- moods per act ---- */
   /* moods per act — p=swell amplitude · spike=chop · spin=flow speed ·
      glitch=scramble · threat=red · gate=the wall · press=impact spray ·
-     water=sonar strip · ekg=ripple rings · ex=lip drift · ey=horizon ·
-     face=barrel approach/curl */
+     ekg=ripple rings · ex=lip drift · ey=horizon · face=barrel curl */
   const MOODS = [
-    { p: .6,  spike: .12, spin: .8,  glitch: .12, threat: .05, gate: 0,  press: 0,   water: .6, ekg: 0,   lum: 1,   ex: 0, ey: .62, face: .08 },
-    { p: .8,  spike: .2,  spin: .95, glitch: .2,  threat: .12, gate: 0,  press: 0,   water: .8, ekg: 0,   lum: 1,   ex: 0, ey: .62, face: .3 },
-    { p: 1.05, spike: .5, spin: 1.1, glitch: .55, threat: .3,  gate: 0,  press: 0,   water: 1,  ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: 1 },
-    { p: 1.0, spike: .7,  spin: 1.,  glitch: .5,  threat: .8,  gate: 1,  press: 1,   water: .7, ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: .7 },
-    { p: .95, spike: .8,  spin: .9,  glitch: .55, threat: .65, gate: 1,  press: .75, water: .5, ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: .4 },
-    { p: .7,  spike: .12, spin: 1.3, glitch: .2,  threat: .15, gate: 1,  press: .25, water: .5, ekg: .25, lum: 1,   ex: 0, ey: .6,  face: .12 },
-    { p: .35, spike: .05, spin: .6,  glitch: .1,  threat: .05, gate: .7, press: .15, water: .4, ekg: .8,  lum: 1.1, ex: 0, ey: .6,  face: .08 },
+    { p: .6,  spike: .12, spin: .8,  glitch: .12, threat: .05, gate: 0,  press: 0,   ekg: 0,   lum: 1,   ex: 0, ey: .62, face: .08 },
+    { p: .8,  spike: .2,  spin: .95, glitch: .2,  threat: .12, gate: 0,  press: 0,   ekg: 0,   lum: 1,   ex: 0, ey: .62, face: .3 },
+    { p: 1.05, spike: .5, spin: 1.1, glitch: .55, threat: .3,  gate: 0,  press: 0,   ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: 1 },
+    { p: 1.0, spike: .7,  spin: 1.,  glitch: .5,  threat: .8,  gate: 1,  press: 1,   ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: .7 },
+    { p: .95, spike: .8,  spin: .9,  glitch: .55, threat: .65, gate: 1,  press: .75, ekg: 0,   lum: 1,   ex: 0, ey: .6,  face: .4 },
+    { p: .7,  spike: .12, spin: 1.3, glitch: .2,  threat: .15, gate: 1,  press: .25, ekg: .25, lum: 1,   ex: 0, ey: .6,  face: .12 },
+    { p: .35, spike: .05, spin: .6,  glitch: .1,  threat: .05, gate: .7, press: .15, ekg: .8,  lum: 1.1, ex: 0, ey: .6,  face: .08 },
   ];
   const MK = Object.keys(MOODS[0]);
   let phase = 0;
@@ -563,29 +527,6 @@ void main(){
   addEventListener('pointermove', e => {
     pxx = (e.clientX / W - .5); pyy = (e.clientY / H - .5);
   }, { passive: true });
-
-  /* ---- intercept log ---- */
-  const LOGS = [
-    [.15, 'SONAR:4417 — swell detected'],
-    [1.15, 'SET: wave trains inbound'],
-    [2.2, 'CREST: pitching — tube forming'],
-    [2.8, 'IMPACT VECTOR: everything'],
-    [3.3, 'WALL: authorization required'],
-    [4.4, 'HELD — it pounds, it waits'],
-    [5.4, 'CHANNEL: cleared by your key'],
-    [6.3, 'STATE: still water'],
-  ];
-  const logEl = document.createElement('div');
-  logEl.className = 'log';
-  document.body.appendChild(logEl);
-  let logIdx = 0;
-  function pushLog(txt) {
-    const line = document.createElement('div');
-    line.textContent = '> ' + txt;
-    logEl.appendChild(line);
-    requestAnimationFrame(() => line.classList.add('on'));
-    while (logEl.children.length > 4) logEl.firstChild.remove();
-  }
 
   let t = 0, scrollVel = 0, lastScroll = scrollY, transit = 0, lastAct = 0, wordGlow = 0;
   /* #p= capture mode — skips boot/transient states for verification captures */
@@ -620,8 +561,6 @@ void main(){
         if (!capture && Math.floor(phase) !== lastAct) { lastAct = Math.floor(phase); transit = Math.max(transit, .6); }
       }
     }
-    while (logIdx < LOGS.length && phase >= LOGS[logIdx][0]) pushLog(LOGS[logIdx++][1]);
-
     /* CRT power-on: the tube strikes a dot, tears to a line, opens the field */
     const bootE = 1 - Math.pow(1 - Math.min(1, t / 1.7), 3);
     const collapse = capture ? 0 : Math.max(transit, 1 - bootE);
@@ -645,7 +584,6 @@ void main(){
     gl.uniform1f(u.Threat, m.threat);
     gl.uniform1f(u.Gate, m.gate);
     gl.uniform1f(u.Press, m.press);
-    gl.uniform1f(u.Water, m.water);
     gl.uniform1f(u.Ekg, m.ekg);
     gl.uniform1f(u.Lum, m.lum);
     gl.uniform1f(u.Ex, m.ex);
@@ -671,7 +609,6 @@ void main(){
     gl.uniform1f(progStamp.u.T, t);
     gl.uniform1f(progStamp.u.Glitch, m.glitch);
     gl.uniform1f(progStamp.u.CellAsp, (cv.width / cols) / (cv.height / rows));
-    gl.uniform2f(progStamp.u.PTR2, .5 + px, .5 - py);
     gl.uniform1f(progStamp.u.WordOn, wordGlow * (.72 + .28 * Math.sin(t * 7.3)));
     if (wAct >= 0) {
       const rw = Math.min(cols - 6, Math.ceil(WORD_LINES[wAct].length * 2.6));
