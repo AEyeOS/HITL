@@ -42,7 +42,7 @@
     'beat1':           [[0,{x:130,o:0}],[.12,{x:0,o:1}],[.28,{o:1}],[.38,{x:-150,o:0}],[1,{x:-150,o:0}]],
     'beat2':           [[0,{x:130,o:0}],[.38,{x:130,o:0}],[.48,{x:0,o:1}],[.62,{o:1}],[.7,{x:-150,o:0}],[1,{x:-150,o:0}]],
     'beat3':           [[0,{x:130,o:0}],[.7,{x:130,o:0}],[.8,{x:0,o:1}],[.94,{o:1}],[1,{x:-150,o:0}]],
-    'sh-hold':         [[0,{x:130,o:0,y:-8}],[.2,{x:0,y:-8,o:1}],[.78,{x:0,o:1}],[1,{x:-140,y:-8,o:0}]],
+    'sh-hold':         [[0,{x:130,o:0,y:0}],[.2,{x:0,y:0,o:1}],[.78,{x:0,o:1}],[1,{x:-140,y:0,o:0}]],
     'sh-hold-note':    [[0,{y:110,o:0}],[.5,{y:38,o:0}],[.64,{y:38,o:1}],[.85,{o:1}],[1,{x:-120,o:0}]],
     'sh-less':         [[0,{x:120,y:-26,o:1}],[.62,{x:-140,y:-26,o:1}],[1,{x:-150,y:-26,o:0}]],
     'sh-more':         [[0,{x:-120,y:26,o:1}],[.68,{x:140,y:26,o:1}],[1,{x:150,y:26,o:0}]],
@@ -82,13 +82,20 @@
       [...node.childNodes].forEach(n => {
         if (n.nodeType === 3) {
           const frag = document.createDocumentFragment();
-          for (const ch of n.textContent) {
-            if (ch.trim() === '') { frag.appendChild(document.createTextNode(ch)); continue; }
-            const s = document.createElement('span');
-            s.className = 'ch' + (inEm ? ' ch-grad' : ''); s.dataset.i = ci++;
-            s.textContent = ch;
-            frag.appendChild(s); chars.push(s);
-            if (inEm) gradChars.push(s);
+          /* group chars by word — spans are wrap points, so words must
+             be atomic groups or lines break mid-word */
+          for (const part of n.textContent.split(/(\s+)/)) {
+            if (part.trim() === '') { frag.appendChild(document.createTextNode(part)); continue; }
+            const w = document.createElement('span');
+            w.className = 'wd';
+            for (const ch of part) {
+              const s = document.createElement('span');
+              s.className = 'ch' + (inEm ? ' ch-grad' : ''); s.dataset.i = ci++;
+              s.textContent = ch;
+              w.appendChild(s); chars.push(s);
+              if (inEm) gradChars.push(s);
+            }
+            frag.appendChild(w);
           }
           node.replaceChild(frag, n);
         } else if (n.nodeType === 1 && n.tagName !== 'BR') {
@@ -102,7 +109,7 @@
   }
   function layoutGrad() {
     for (const s of gradChars) {
-      const em = s.parentElement;
+      const em = s.closest('.ch-parent') || s.parentElement;
       s.style.background = GRAD;
       s.style.webkitBackgroundClip = 'text';
       s.style.backgroundClip = 'text';
@@ -340,7 +347,7 @@ void main(){
 precision highp float;
 uniform sampler2D IMG;
 uniform vec2 R;
-uniform float T, Glitch, Collapse;
+uniform float T, Glitch, Collapse, Roll;
 float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 void main(){
   vec2 uv = gl_FragCoord.xy/R;
@@ -360,7 +367,7 @@ void main(){
   col.b=texture2D(IMG,uv-ca).b;
   col*=1.-.09*sin(uv.y*R.y*3.14159);
   float roll=fract(T*.13);
-  col+=vec3(1.,.7,.3)*exp(-pow((uv.y-roll)*9.,2.))*.07;
+  col+=vec3(1.,.7,.3)*exp(-pow((uv.y-roll)*9.,2.))*.07*Roll;
   col+=(h2(uv*fract(T)*371.)-.5)*.05;
   col*=1.-smoothstep(.82,1.,Collapse);
   col*=smoothstep(1.18,.34,distance(uv,vec2(.5)));
@@ -642,6 +649,7 @@ void main(){
     gl.uniform1f(progDisp.u.T, t);
     gl.uniform1f(progDisp.u.Glitch, m.glitch);
     gl.uniform1f(progDisp.u.Collapse, collapse);
+    gl.uniform1f(progDisp.u.Roll, W < 700 ? 0 : 1);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     const tmp = fbA; fbA = fbB; fbB = tmp;
